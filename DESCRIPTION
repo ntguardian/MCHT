@@ -1,0 +1,17 @@
+Package: MCHT
+Title: Monte Carlo Hypothesis Testing
+Version: 0.0.0.9000
+Authors@R: person("Curtis", "Miller", email = "cmiller@math.utah.edu", role = c("aut", "cre"))
+Description: Facilitates Monte Carlo hypothesis testing.
+Depends: R (>= 3.5.1)
+Imports:
+    testthat,
+    doParallel,
+    doRNG,
+    memoise,
+    foreach
+License: MIT + License
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.0
+Suggests: testthat
