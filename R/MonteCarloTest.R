@@ -25,10 +25,16 @@
 #' @param test_stat A function that computes the test statistic from input data;
 #'                 \code{x} must be a parameter of this function representing
 #'                 test data 
-#' @param stat_gen A function that generates simulated values of the test
-#'                 statistic; \code{n} must be a parameter of this function
-#'                 (representing the sample size of the statistic), and this
-#'                 function is expected to return one numeric output
+#' @param stat_gen A function that generates values of the test statistic when
+#'                 given data; \code{x} (representing a sample) must be a
+#'                 parameter of this function, and this function is expected to
+#'                 return one numeric output, but if \code{n} is a parameter,
+#'                 this will be interpreted as sample size information (this
+#'                 could be useful for allowing a "burn-in" period in random
+#'                 data, as is often the case when working with time series
+#'                 data)
+#' @param rand_gen A function generating random data; \code{n} (representing a
+#'                 sample size) must be a parameter of this function
 #' @param N Integer representing the number of replications of \code{stat_gen}
 #'          to generate
 #' @param seed The random seed used to generate simulated statistic values; if
@@ -52,7 +58,10 @@
 #'                    and \code{stat_gen} need to be able to recognize the
 #'                    contents of this vector as parameters (for example, if
 #'                    this argument is \code{"mu"}, then \code{mu} needs to be
-#'                    an argument of both \code{test_stat} and \code{stat_gen})
+#'                    an argument of both \code{test_stat} and \code{stat_gen}),
+#'                    and the resulting test will try to pass these parameters
+#'                    to \code{rand_gen} (but these \emph{do not} need to be
+#'                    parameters of \code{rand_gen})
 #' @param lock_alternative If \code{TRUE}, then the resulting function will
 #'                         effectively ignore the \code{alternative} parameter,
 #'                         while if \code{FALSE}, the resulting function will be
@@ -65,7 +74,25 @@
 #'                     are being used then test output is more informative and
 #'                     errors will be raised if \code{test_stat} and
 #'                     \code{stat_gen} don't accept these parameters, which is
-#'                     safer
+#'                     safer, and the resulting test will try to pass these
+#'                     parameters to \code{rand_gen} (but these \emph{do not}
+#'                     need to be parameters of \code{rand_gen})
+#' @param nuisance_params A character vector of the names of parameters to be
+#'                        treated as nuisance parameters; must be parameters
+#'                        of \code{test_stat} and \code{stat_gen}, but these
+#'                        \emph{will not} be viewed as parameters of
+#'                        \code{rand_gen}, and cannot be non-\code{NULL} if
+#'                        \code{optim_control} is \code{NULL}
+#' @param optim_control A list of arguments to be passed to
+#'                      \code{\link[GenSA]{GenSA}}, containing at least
+#'                      \code{lower} and \code{upper} elements as named vectors,
+#'                      with the names being identical to
+#'                      \code{nuisance_params}, but could also include other
+#'                      arguments to be passed to \code{\link[GenSA]{GenSA}};
+#'                      the \code{fn} parameter will be set, and parameters of
+#'                      that function will be the parameters mentioned in
+#'                      \code{nuisance_params}, and this argument will be
+#'                      ignored if \code{nuisance_params} is \code{NULL}
 #' @return A \code{MCHTest}-class object, a function with parameters \code{x},
 #'         \code{alternative}, and \code{...}, with other parameters being
 #'         passed to functions such as those passed to \code{test_stat} and
@@ -85,32 +112,50 @@
 #'                      test_params = "mu", lock_alternative = FALSE)
 #' mc.t.test(dat1)
 #' mc.t.test(dat1, mu = 0.1, alternative = "two.sided")
-MCHTest <- function(test_stat, stat_gen, N = 10000, seed = NULL,
+MCHTest <- function(test_stat, stat_gen, rand_gen, N = 10000, seed = NULL,
                     memoise_sample = TRUE, pval_func = pval,
                     method = "Monte Carlo Test", test_params = NULL,
-                    fixed_params = NULL, lock_alternative = TRUE) {
-  # TODO: curtis: TEST WITH NUISANCE PARAMETERS -- Sun 30 Sep 2018 01:28:33 AM MDT
+                    fixed_params = NULL, nuisance_params = NULL,
+                    optim_control = NULL, lock_alternative = TRUE) {
+  # Vector of names of function formals
   test_stat_formals <- names(formals(test_stat))
   stat_gen_formals <- names(formals(stat_gen))
+  rand_gen_formals <- names(formals(rand_gen))
   pval_formals <- names(formals(pval_func))
 
   # Requirement checking
   testthat::expect_is(test_stat, "function")
   testthat::expect_is(stat_gen, "function")
-  testthat::expect_true("n" %in% stat_gen_formals)
+  testthat::expect_true("n" %in% rand_gen_formals)
+  testthat::expect_true("x" %in% stat_gen_formals)
   testthat::expect_true("x" %in% test_stat_formals)
-  if (!is.null(test_params)) {
-    testthat::expect_is(test_params, "character")
-    testthat::expect_true(all(test_params %in% test_stat_formals))
-    testthat::expect_true(all(test_params %in% stat_gen_formals))
+  for (param in list(test_params, fixed_params, nuisance_params)) {
+    if (!is.null(param)) {
+      check_params_in_functions(param, list(stat_gen))
+    }
   }
-  if (!is.null(fixed_params)) {
-    testthat::expect_is(fixed_params, "character")
-    testthat::expect_true(all(fixed_params %in% test_stat_formals))
-    testthat::expect_true(all(fixed_params %in% stat_gen_formals))
+  for (param in list(test_params, fixed_params)) {
+    if (!is.null(param)) {
+      check_params_in_functions(param, list(test_stat))
+    }
   }
   testthat::expect_true(all(c("S", "sample_S") %in% pval_formals))
+  if (!is.null(nuisance_params)) {
+    if (is.null(optim_control)) stop("If nuisance_params is not NULL," %s%
+                                     "optim_control must be a proper list")
+    testthat::expect_is(optim_control, "list")
+    testthat::expect_true(all(c("lower", "upper") %in% names(optim_control)))
+    testthat::expect_equal(nuisance_params, names(optim_control$lower))
+    testthat::expect_equal(nuisance_params, names(optim_control$upper))
+  }
+  if (length(intersect(nuisance_params, test_params)) > 0 |
+      length(intersect(nuisance_params, fixed_params)) > 0 |
+      length(intersect(test_params, fixed_params)) > 0) {
+    stop("Parameter vectors cannot have parameters in common!")
+  }
 
+  # Because memoisation conflicts with randomness, issue a warning if it appears
+  # the user wants randomness but also turned on memoisation
   if (is.null(seed)) {
     if (memoise_sample) {
       warning("seed is NULL but memoization is enabled; separate function" %s%
@@ -118,51 +163,122 @@ MCHTest <- function(test_stat, stat_gen, N = 10000, seed = NULL,
     }
   }
 
-  sample_gen <- function(...) {
-    foreach <- foreach::foreach
-    `%dorng%` <- doRNG::`%dorng%`
-    `%dopar%` <- foreach::`%dopar%`
+  # Frequently used external functions
+  foreach <- foreach::foreach
+  `%dorng%` <- doRNG::`%dorng%`
+  `%dopar%` <- foreach::`%dopar%`
 
+  # Function responsible for generating random numbers to be used by stat_gen to
+  # generate simulated statistics under H_0
+  sample_gen <- function(...) {
     args <- list(...)
-    seed <- sample(1:999999999, 1)
-    s <- foreach(i = 1:N, .combine = c, .options.RNG = seed) %dorng% {
-      do.call(stat_gen, args)
+    testthat::expect_true("n" %in% names(args))
+
+    if (is.null(seed)) {seed <- sample(1:999999999, 1)}
+    s <- foreach(i = 1:N, .options.RNG = seed) %dorng% {
+      do.call(rand_gen, args)
     }
+    testthat::expect_is(s, "list")
     attr(s, "rng") <- NULL
-    as.numeric(s)
+    lapply(s, as.numeric)
   }
+
+  # Function responsible for returning simulated statistics under the null
+  # hypothesis, accounting for possible nuisance parameters
+  stat_sim <- function(sample_gen_args, pval_args, ...) {
+    args <- list(...)
+    testthat::expect_is(sample_gen_args, "list")
+    testthat::expect_true("n" %in% names(sample_gen_args))
+    testthat::expect_is(pval_args, "list")
+
+    samples <- do.call(sample_gen, sample_gen_args)
+    # Just return a sample of simulated statistics under H0
+    if (is.null(nuisance_params)) {
+      foreach(x = samples, .combine = c) %dopar% {
+        args$x <- x
+        do.call(stat_gen, args)
+      }
+    } else {
+      # The function to be optimized
+      fn <- function(par, ...) {
+        names(par) <- nuisance_params
+        for (np in nuisance_params) {
+          args[[np]] <- par[[np]]
+        }
+        pval_args$sample_S <- foreach(x = samples, .combine = c) %dopar% {
+          args$x <- x
+          do.call(stat_gen, args)
+        }
+        -do.call(pval_func, pval_args)[[1]]
+      }
+
+      # Optimize the function
+      optim_control$fn <- fn
+      optim_res <- do.call(GenSA::GenSA, optim_control)
+
+      # Now that we have adversariallly chosen the nuisance parameters, return
+      # the "worst case" sample of simulated statistics
+      for (np in nuisance_params) {
+        args[[np]] <- optim_res$par[[np]]
+      }
+      foreach(x = samples, .combine = c) %dopar% {
+        args$x <- x
+        do.call(stat_gen, args)
+      }
+    }
+  }
+
   if (memoise_sample) {
     sample_gen <- memoise::memoise(sample_gen)
+    stat_sim <- memoise::memoise(stat_sim)
   }
 
   # The function to be returned
   f <- function(x, alternative = NULL, ...) {
+    # Setting up arguments for these functions
     stat_args <- list(...)
-    test_stat_args <- stat_args; test_stat_args$x <- x
+    n <- length(x)
+    test_stat_args <- stat_args
+    test_stat_args$x <- x
     test_stat_args <- test_stat_args[which(
       names(test_stat_args) %in% test_stat_formals)]
-    n <- length(x)
-    stat_gen_args <- stat_args; stat_gen_args$n <- n
-    stat_gen_args <- stat_gen_args[which(
-      names(stat_gen_args) %in% stat_gen_formals)]
+
+    rand_gen_args <- stat_args
+    rand_gen_args$n <- n
+    rand_gen_args <- rand_gen_args[which(
+      !(names(rand_gen_args) %in% nuisance_params) & 
+        (names(rand_gen_args) %in% rand_gen_formals))]
 
     S <- do.call(test_stat, test_stat_args)
     testthat::expect_equal(length(S), 1)
-    sample_S <- do.call(sample_gen, stat_gen_args)
 
-    pval_args <- list("S" = S, "sample_S" = sample_S)
+    pval_args <- list("S" = S)
     if (!lock_alternative) {
       pval_args$alternative <- alternative
     } else {
       alternative <- NULL
     }
     pval_args <- pval_args[which(names(pval_args) %in% pval_formals)]
+
+    stat_gen_args <- stat_args
+    stat_gen_args$n <- n
+    stat_gen_args <- stat_gen_args[which(
+      names(stat_gen_args) %in% stat_gen_formals)]
+    stat_gen_args$sample_gen_args <- rand_gen_args
+    stat_gen_args$pval_args <- pval_args
+    stat_gen_args$pval_args$sample_S <- NULL
+
+    # Get a sample of simulated statistics, and compute a p-value
+    testthat::expect_is(stat_gen_args, "list")
+    sample_S <- do.call(stat_sim, stat_gen_args)
+    pval_args$sample_S <- sample_S
     test_pval <- do.call(pval_func, pval_args)[[1]]
     if (test_pval < 0 | test_pval > 1) {
       stop("Bad p-value computed! It was" %s% test_pval)
     }
     testthat::expect_is(test_pval, "numeric")
     
+    # Set up the htest-class object to be returned
     res <- list(
       "data.name" = deparse(substitute(x)),
       "method" = method,
@@ -245,6 +361,12 @@ get_MCHTest_settings <- function(x) {
   res$f <- NULL
   res$pval_formals <- NULL
   res$test_stat_formals <- NULL
+  res$rand_gen_formals <- NULL
+  res$`%dorng%` <- NULL
+  res$`%dopar%` <- NULL
+  res$foreach <- NULL
+  res$stat_sim <- NULL
+  res$param <- NULL
 
   res
 }
@@ -269,14 +391,25 @@ print.MCHTest <- function(f, prefix = "\t") {
   }
   cat("Seed: ", f_info$seed, "\n")
   cat("Replications: ", f_info$N, "\n")
-  if (length(f_info$test_params) > 0) {
-    cat("Tested Parameters: ", f_info$test_params, "\n")
-    for (param in f_info$test_params) {
-      val <- formals(f_info$test_stat)[[param]]
-      if (!is.symbol(val) & !is.null(val)) {
-        cat("Default", param %s0% ": ", val, "\n")
+
+  print_params <- function(params, param_string) {
+    if (length(params) > 0) {
+      cat(param_string %s0% ": ", params, "\n")
+      for (p in params) {
+        if (!is.symbol(formals(f_info$test_stat)[[p]])) {
+          val <- formals(f_info$test_stat)[[p]]
+          if (!is.null(val)) {
+            cat("Default", p %s0% ": ", val, "\n")
+          }
+        }
       }
     }
+  }
+  
+  print_params(f_info$test_params, "Tested Parameters")
+  print_params(f_info$fixed_params, "Assumed Parameters")
+  if (length(f_info$nuisance_params) > 0) {
+    cat("Nuisance Parameters: ", f_info$nuisance_params, "\n")
   }
   cat("\n")
 
