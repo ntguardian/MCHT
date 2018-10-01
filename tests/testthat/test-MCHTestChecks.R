@@ -43,6 +43,11 @@ test_gen_3 <- function(x, mu, sigma) {
   sqrt(length(x)) * (mean(x) - mu)/sd(x)
 }
 
+test_gen_4 <- function(x, mu, sigma) {
+  x <- sigma * x + mu
+  mean(x) - mu
+}
+
 rand_gen_1 <- function(n) {
   rnorm(n)
 }
@@ -96,11 +101,17 @@ test_that("An MCHTest-class object functions properly", {
   mc.test.4 <- MCHTest(test_stat_3, test_gen_3, rand_gen_1, N = 100, seed = 100,
                        test_params = "mu", fixed_params = "sigma",
                        lock_alternative = FALSE)
-  mc.test.5 <- MCHTest(test_stat_4, test_gen_3, rand_gen_1, N = 100, seed = 100,
+  mc.test.5 <- MCHTest(test_stat_4, test_gen_4, rand_gen_1, N = 100, seed = 100,
                        test_params = "mu", nuisance_params = "sigma",
                        optim_control = list("lower" = c("sigma" = 0),
                                             "upper" = c("sigma" = 100)),
-                       lock_alternative = FALSE)
+                       lock_alternative = FALSE, threshold_pval = 0.2)
+  mc.test.6 <- MCHTest(test_stat_4, test_gen_4, rand_gen_1, N = 100, seed = 100,
+                       test_params = "mu", nuisance_params = "sigma",
+                       optim_control = list("lower" = c("sigma" = 0),
+                                            "upper" = c("sigma" = 100)),
+                       lock_alternative = FALSE, threshold_pval = 0.2,
+                       suppress_threshold_warning = TRUE)
 
   set.seed(1234)
   registerDoParallel(1)
@@ -125,6 +136,11 @@ test_that("An MCHTest-class object functions properly", {
                          sigma = 1)$p.value, 0.96)
   expect_equal(mc.test.4(dat, alternative = "two.sided", mu = 0.5,
                          sigma = 2)$p.value, 0.94)
+  expect_warning(mc.test.5(dat, alternative = "two.sided", mu = 0.5),
+                 "Computed p-value is greater than threshold value \\(0.2\\);")
+  expect_silent(mc.test.6(dat, alternative = "two.sided", mu = 0.5))
+  expect_equal(mc.test.6(dat, alternative = "two.sided", mu = 0.5)$p.value,
+               0.9)
 })
 
 test_that("get_MCHTest_settings() functions properly", {

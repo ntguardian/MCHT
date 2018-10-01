@@ -4,20 +4,28 @@
 \alias{MCHTest}
 \title{Create an MCHTest Object}
 \usage{
-MCHTest(test_stat, stat_gen, N = 10000, seed = NULL,
+MCHTest(test_stat, stat_gen, rand_gen, N = 10000, seed = NULL,
   memoise_sample = TRUE, pval_func = pval,
   method = "Monte Carlo Test", test_params = NULL,
-  fixed_params = NULL, lock_alternative = TRUE)
+  fixed_params = NULL, nuisance_params = NULL, optim_control = NULL,
+  lock_alternative = TRUE)
 }
 \arguments{
 \item{test_stat}{A function that computes the test statistic from input data;
 \code{x} must be a parameter of this function representing
 test data}
 
-\item{stat_gen}{A function that generates simulated values of the test
-statistic; \code{n} must be a parameter of this function
-(representing the sample size of the statistic), and this
-function is expected to return one numeric output}
+\item{stat_gen}{A function that generates values of the test statistic when
+given data; \code{x} (representing a sample) must be a
+parameter of this function, and this function is expected to
+return one numeric output, but if \code{n} is a parameter,
+this will be interpreted as sample size information (this
+could be useful for allowing a "burn-in" period in random
+data, as is often the case when working with time series
+data)}
+
+\item{rand_gen}{A function generating random data; \code{n} (representing a
+sample size) must be a parameter of this function}
 
 \item{N}{Integer representing the number of replications of \code{stat_gen}
 to generate}
@@ -47,14 +55,37 @@ specified under the null hypothesis; both \code{test_stat}
 and \code{stat_gen} need to be able to recognize the
 contents of this vector as parameters (for example, if
 this argument is \code{"mu"}, then \code{mu} needs to be
-an argument of both \code{test_stat} and \code{stat_gen})}
+an argument of both \code{test_stat} and \code{stat_gen}),
+and the resulting test will try to pass these parameters
+to \code{rand_gen} (but these \emph{do not} need to be
+parameters of \code{rand_gen})}
 
 \item{fixed_params}{A character vector of the names of parameters treated as
 fixed values; this isn't needed but if these parameters
 are being used then test output is more informative and
 errors will be raised if \code{test_stat} and
 \code{stat_gen} don't accept these parameters, which is
-safer}
+safer, and the resulting test will try to pass these
+parameters to \code{rand_gen} (but these \emph{do not}
+need to be parameters of \code{rand_gen})}
+
+\item{nuisance_params}{A character vector of the names of parameters to be
+treated as nuisance parameters; must be parameters
+of \code{test_stat} and \code{stat_gen}, but these
+\emph{will not} be viewed as parameters of
+\code{rand_gen}, and cannot be non-\code{NULL} if
+\code{optim_control} is \code{NULL}}
+
+\item{optim_control}{A list of arguments to be passed to
+\code{\link[GenSA]{GenSA}}, containing at least
+\code{lower} and \code{upper} elements as named vectors,
+with the names being identical to
+\code{nuisance_params}, but could also include other
+arguments to be passed to \code{\link[GenSA]{GenSA}};
+the \code{fn} parameter will be set, and parameters of
+that function will be the parameters mentioned in
+\code{nuisance_params}, and this argument will be
+ignored if \code{nuisance_params} is \code{NULL}}
 
 \item{lock_alternative}{If \code{TRUE}, then the resulting function will
 effectively ignore the \code{alternative} parameter,
@@ -83,6 +114,7 @@ results of a Monte Carlo statistical test. These object will accept datasets
 and perhaps some parameters and will return the results of a test.
 }
 \examples{
+TODO: curtis: MORE EXAMPLES -- Sun 30 Sep 2018 01:29:04 AM MDT
 dat1 <- c(0.16, 1.00, 0.67, 1.28, 0.31, 1.16, 1.25, 0.93, 0.66, 0.54)
 mc.t.test <- MCHTest(test_stat = function(x, mu = 0) {
                        sqrt(length(x)) * (mean(x) - mu)/sd(x)

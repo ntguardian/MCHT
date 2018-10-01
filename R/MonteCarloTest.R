@@ -93,6 +93,15 @@
 #'                      that function will be the parameters mentioned in
 #'                      \code{nuisance_params}, and this argument will be
 #'                      ignored if \code{nuisance_params} is \code{NULL}
+#' @param threshold_pval A numeric value that represents a threshold
+#'                       \eqn{p}-value that, if surpassed by the optimization
+#'                       algorithm, will cause the algorithm to terminate; will
+#'                       override the \code{threshold.stop} argument in the
+#'                       \code{control} list that's used by
+#'                       \code{\link[GenSA]{GenSA}}
+#' @param suppress_threshold_warning If \code{TRUE}, user will not be warned if
+#'                                   the threshold \eqn{p}-value was surpassed
+#'                                   by the optimization algorithm
 #' @return A \code{MCHTest}-class object, a function with parameters \code{x},
 #'         \code{alternative}, and \code{...}, with other parameters being
 #'         passed to functions such as those passed to \code{test_stat} and
@@ -116,12 +125,15 @@ MCHTest <- function(test_stat, stat_gen, rand_gen, N = 10000, seed = NULL,
                     memoise_sample = TRUE, pval_func = pval,
                     method = "Monte Carlo Test", test_params = NULL,
                     fixed_params = NULL, nuisance_params = NULL,
-                    optim_control = NULL, lock_alternative = TRUE) {
+                    optim_control = NULL, lock_alternative = TRUE,
+                    threshold_pval = 1, suppress_threshold_warning = FALSE) {
   # Vector of names of function formals
   test_stat_formals <- names(formals(test_stat))
   stat_gen_formals <- names(formals(stat_gen))
   rand_gen_formals <- names(formals(rand_gen))
   pval_formals <- names(formals(pval_func))
+
+  threshold_pval <- as.numeric(threshold_pval)
 
   # Requirement checking
   testthat::expect_is(test_stat, "function")
@@ -153,6 +165,7 @@ MCHTest <- function(test_stat, stat_gen, rand_gen, N = 10000, seed = NULL,
       length(intersect(test_params, fixed_params)) > 0) {
     stop("Parameter vectors cannot have parameters in common!")
   }
+  testthat::expect_true(threshold_pval > 0 & threshold_pval <= 1)
 
   # Because memoisation conflicts with randomness, issue a warning if it appears
   # the user wants randomness but also turned on memoisation
@@ -186,7 +199,7 @@ MCHTest <- function(test_stat, stat_gen, rand_gen, N = 10000, seed = NULL,
   # Function responsible for returning simulated statistics under the null
   # hypothesis, accounting for possible nuisance parameters
   stat_sim <- function(sample_gen_args, pval_args, ...) {
-    args <- list(...)
+    stat_gen_args <- list(...)
     testthat::expect_is(sample_gen_args, "list")
     testthat::expect_true("n" %in% names(sample_gen_args))
     testthat::expect_is(pval_args, "list")
@@ -195,19 +208,24 @@ MCHTest <- function(test_stat, stat_gen, rand_gen, N = 10000, seed = NULL,
     # Just return a sample of simulated statistics under H0
     if (is.null(nuisance_params)) {
       foreach(x = samples, .combine = c) %dopar% {
-        args$x <- x
-        do.call(stat_gen, args)
+        stat_gen_args$x <- x
+        do.call(stat_gen, stat_gen_args)
       }
     } else {
+      if (!is.null(optim_control$control)) {
+        optim_control$control$threshold.stop = -threshold_pval
+      } else {
+        optim_control$control <- list("threshold.stop" = -threshold_pval)
+      }
       # The function to be optimized
-      fn <- function(par, ...) {
-        names(par) <- nuisance_params
+      fn <- function(pm, ...) {
+        names(pm) <- nuisance_params
         for (np in nuisance_params) {
-          args[[np]] <- par[[np]]
+          stat_gen_args[[np]] <- pm[[np]]
         }
         pval_args$sample_S <- foreach(x = samples, .combine = c) %dopar% {
-          args$x <- x
-          do.call(stat_gen, args)
+          stat_gen_args$x <- x
+          do.call(stat_gen, stat_gen_args)
         }
         -do.call(pval_func, pval_args)[[1]]
       }
@@ -219,11 +237,11 @@ MCHTest <- function(test_stat, stat_gen, rand_gen, N = 10000, seed = NULL,
       # Now that we have adversariallly chosen the nuisance parameters, return
       # the "worst case" sample of simulated statistics
       for (np in nuisance_params) {
-        args[[np]] <- optim_res$par[[np]]
+        stat_gen_args[[np]] <- optim_res$par[[np]]
       }
       foreach(x = samples, .combine = c) %dopar% {
-        args$x <- x
-        do.call(stat_gen, args)
+        stat_gen_args$x <- x
+        do.call(stat_gen, stat_gen_args)
       }
     }
   }
@@ -277,6 +295,12 @@ MCHTest <- function(test_stat, stat_gen, rand_gen, N = 10000, seed = NULL,
       stop("Bad p-value computed! It was" %s% test_pval)
     }
     testthat::expect_is(test_pval, "numeric")
+    if (test_pval >= threshold_pval & threshold_pval < 1 &
+        length(nuisance_params) > 0 & !suppress_threshold_warning) {
+      warning("Computed p-value is greater than threshold value (" %s0%
+              threshold_pval %s0% "); the optimization algorithm may have" %s%
+              "terminated early")
+    }
     
     # Set up the htest-class object to be returned
     res <- list(
@@ -418,6 +442,12 @@ print.MCHTest <- function(f, prefix = "\t") {
   }
   if (f_info$lock_alternative) {
     cat("Argument \"alternative\" is locked\n")
+  }
+  if (length(f_info$nuisance_params) > 0 & f_info$threshold_pval < 1) {
+    cat("Threshold p-Value: ", f_info$threshold_pval, "\n")
+    if (suppress_threshold_warning) {
+      cat("Threshold p-value warnings suppressed\n")
+    }
   }
 
   if (f_info$memoise_sample | f_info$lock_alternative) {
