@@ -23,7 +23,7 @@
 #' @param y Another object
 #' @return A string combining \code{x} and \code{y} with a space separating them
 #' @examples
-#' `%s%` <- CPAT:::`%s%`
+#' `%s%` <- MCHT:::`%s%`
 #' "Hello" %s% "world"
 `%s%` <- function(x, y) {paste(x, y)}
 
@@ -34,7 +34,7 @@
 #' @inheritParams %s%
 #' @return A string combining \code{x} and \code{y}
 #' @examples
-#' `%s0%` <- CPAT:::`%s0%`
+#' `%s0%` <- MCHT:::`%s0%`
 #' "Hello" %s0% "world"
 `%s0%` <- function(x, y) {paste0(x, y)}
 
@@ -50,7 +50,7 @@
 #' @param params Character vector with parameter names
 #' @param func_list List of functions to check
 #' @examples
-#' check_params_in_functions(c("x"), list(mean))
+#' MCHT:::check_params_in_functions(c("x"), list(mean))
 check_params_in_functions <- function(params, func_list) {
   testthat::expect_is(params, "character")
   testthat::expect_is(func_list, "list")

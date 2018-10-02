@@ -58,3 +58,59 @@ pval <- function(S, sample_S, alternative = NULL) {
     stop("Don't know how to interpret alternative")
   }
 }
+
+################################################################################
+# RANDOM VARIABLE GENERATION
+################################################################################
+
+#' Memoised Random Variable Generation
+#'
+#' Creates a function that generates random numbers with memoization
+#'
+#' This is a function generator, with the returned function being one that can
+#' handle a set seed and will remember if it needs to regenerate a new set of
+#' random numbers. This allows both for control over random number generation
+#' and for faster performance.
+#'
+#' @param r The random number generator
+#' @param seed The seed value, to be passed to \code{\link[base]{set.seed}}
+#' @return A function that generates random numbers with a set seed and with
+#'         memoization; accepts \code{seed} and all other arguments that could
+#'         be passed to the original random number generator
+#' @examples
+#' memo_runif <- gen_memo_runif(runif)
+#' memo_runif(10)
+gen_memo_rng <- function(r, seed = NULL) {
+  force(r)
+  force(seed)
+  old_seed <- NULL
+  out <- NULL
+  old_args <- NULL
+  
+  f <- function(...) {
+    args <- list(...)
+    if (!is.null(seed)) {
+      old_seed <<- tryCatch(.Random.seed, error = function(e) {
+        throwaway <- runif(1)
+        .Random.seed
+      })
+      set.seed(seed)
+    }
+    # Check for change in random state or whether function's been called or
+    # whether call itself has changed
+    if (is.null(out) | any(.Random.seed != old_seed) |
+        !identical(args, old_args)) {
+      # Regenerate random data
+      out <<- do.call(r, args)
+      old_args <<- args
+      # Enables memoization even if seed not set
+      if (is.null(seed) | is.null(old_seed)) {
+        old_seed <<- .Random.seed
+      }
+    }
+    if (!is.null(seed)) {
+      .Random.seed <<- old_seed
+    }
+    out
+  }
+}

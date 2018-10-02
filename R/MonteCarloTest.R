@@ -121,8 +121,8 @@
 #'                      test_params = "mu", lock_alternative = FALSE)
 #' mc.t.test(dat1)
 #' mc.t.test(dat1, mu = 0.1, alternative = "two.sided")
-MCHTest <- function(test_stat, stat_gen, rand_gen, N = 10000, seed = NULL,
-                    memoise_sample = TRUE, pval_func = pval,
+MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
+                    seed = NULL, memoise_sample = TRUE, pval_func = pval,
                     method = "Monte Carlo Test", test_params = NULL,
                     fixed_params = NULL, nuisance_params = NULL,
                     optim_control = NULL, lock_alternative = TRUE,
@@ -362,7 +362,9 @@ MCHTest <- function(test_stat, stat_gen, rand_gen, N = 10000, seed = NULL,
 #'         \code{FALSE} otherwise
 #' @export
 #' @examples
+#' f <- MCHTest(mean, mean, seed = 100)
 #' is.MCHTest(1)
+#' is.MCHTest(f)
 is.MCHTest <- function(x) {
   inherits(x, "MCHTest")
 }
@@ -375,7 +377,8 @@ is.MCHTest <- function(x) {
 #' @return A list with all the variables relevant to \code{x}
 #' @export
 #' @examples
-#' get_MCHTest_settings()  # TODO: EXAMPLE
+#' f <- MCHTest(mean, mean, seed = 100)
+#' get_MCHTest_settings(f)
 get_MCHTest_settings <- function(x) {
   if (!is.MCHTest(x)) {stop(deparse(substitute(x)) %s% "is not an" %s%
                          "MCHTest-class object")}
@@ -402,7 +405,8 @@ get_MCHTest_settings <- function(x) {
 #' @param f The \code{MCHTest}-class object
 #' @export
 #' @examples
-#' MCHT:::print.MCHTest()  # TODO: EXAMPLE
+#' f <- MCHTest(mean, mean, seed = 100)
+#' print(f)
 print.MCHTest <- function(f, prefix = "\t") {
   f_info <- get_MCHTest_settings(f)
 

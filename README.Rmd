@@ -1,0 +1,137 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-"
+)
+```
+
+# MCHT
+
+*Version `r packageVersion("MCHT")`*
+
+**MCHT** is a package implementing an interface for creating and using Monte
+Carlo tests. The primary function of the package is `MCHTest()`, which creates
+functions with S3 class `MCHTest` that perform a Monte Carlo test.
+
+## Installation
+
+**MCHT** is not presently available on CRAN. You can download and install 
+**MCHT** from GitHub using [**devtools**](https://github.com/r-lib/devtools) via
+the R command `devtools::install_github("ntguardian/MCHT")`.
+
+## Monte Carlo Hypothesis Testing
+
+Monte Carlo testing is a form of hypothesis testing where the $p$-values are
+computed using the empirical distribution of the test statistic computed from
+data simulated under the null hypothesis. These tests are used when the
+distribution of the test statistic under the null hypothesis is intractable or
+difficult to compute, or as an exact test (that is, a test where the
+distribution used to compute $p$-values is appropriate for any sample size, not
+just large sample sizes).
+
+Suppose that $s_n$ is the observed value of the test statistic and large values
+of $s_n$ are evidence against the null hypothesis; normally, $p$-values would be
+computed as $1 - F(s_n)$, where $F(s_n) = F(S_n \leq s_n)$ is the cumulative
+distribution functions and $S_n$ is the random variable version of $s_n$. We
+cannot use $F$ for some reason; it's intractable, or the $F$ provided is only
+appropriate for large sample sizes.
+
+Instead of using $F$ we will use $\hat{F}_N$, which is the empirical CDF of
+the same test statistic computed from simulated data following the distribution
+prescribed by the null hypothesis of the test. For the sake of simplicity in
+this presentation, assume that $S$ is a continuous random variable. Now our
+$p$-value is $1 - \hat{F}_N(s_n)$, where $\hat{F}_N(s_n) = \frac{1}{N}\sum_{j =
+1}^{N}\mathbb{1}_{\{\tilde{S}_{n,j} \leq s_n\}}$ and $\tilde{S}_{n,j}$ is an
+independent random copy of $S_n$ computed from simulated data with a sample size
+of $n$.
+
+The power of these tests increase with $N$ (see [1]) but modern computers are
+able to simulate large $N$ quickly, so this is rarely an issue. The procedure
+above also assumes that there are no nuisance parameters and the distribution of
+$S_n$ can effectively be known precisely when the null hypothesis is true (and
+all other conditions of the test are met, such as distributional assumptions). A
+different procedure needs to be applied when nuisance parameters are not
+explicitly stated under the null hypothesis. [2] suggests a procedure using
+optimization techniques (recommending simulated annealing specifically) to
+adversarially select values for nuisance parameters valid under the null
+hypothesis that maximize the $p$-value computed from the simulated data. That is
+the procedure employed here. (In fact, the tests created by `MCHTest()` are the
+tests described in [2].)
+
+See the documentation for more details and references.
+
+## Examples
+
+`MCHTest()` is the main function of the package and can create functions with S3
+class `MCHTest` that perform Monte Carlo hypothesis tests.
+
+For example, the code below creates the Monte Carlo equivalent of a $t$-test.
+
+```{r}
+library(MCHT)
+library(doParallel)
+
+registerDoParallel(detectCores())  # Necessary for parallelization, and if not
+                                   # done the resulting function will complain
+                                   # on the first use
+
+ts <- function(x, mu = 0) {sqrt(length(x)) * (mean(x) - mu)/sd(x)}
+sg <- function(x, mu = 0) {
+  x <- x + mu
+  ts(x)
+}
+rg <- rnorm
+
+mc.t.test <- MCHTest(ts, sg, rg, seed = 20181001, test_params = "mu", 
+                     lock_alternative = FALSE,
+                     method = "Monte Carlo One Sample t-Test")
+```
+
+The object `mc.t.test()` is an S3 class, and a callable function.
+
+```{r}
+class(mc.t.test)
+```
+
+`print()` will print relevant information about the construction of the test.
+
+```{r}
+mc.t.test
+```
+
+Once this object is created, we can use it for performing hypothesis tests.
+
+```{r}
+dat <- c(2.3, -0.13, 1.42, 1.51, 3.43, -0.96, 0.59, 0.62, 1.28, 4.07)
+
+t.test(dat, mu = 1, alternative = "two.sided")  # For reference
+mc.t.test(dat, mu = 1)
+mc.t.test(dat, mu = 1, alternative = "two.sided")
+```
+
+This is the simplest example; `MCHTest()` can create more involved Monte Carlo
+tests. See other documentation for details.
+
+## Planned Future Features
+
+* Permutation tests are a form of Monte Carlo test; perhaps we could add a class
+  for constructing permutation tests like we did for Monte Carlo tests.
+* Bootstrap tests are yet another form of Monte Carlo tests; we could give some
+  constructor for making bootstrap tests too.
+
+## References
+
+1. A. C. A. Hope, *A simplified Monte Carlo test procedure*, JRSSB, vol. 30
+   (1968) pp. 582-598
+2. J-M Dufour, *Monte Carlo tests with nuisance parameters: A general approach
+   to finite-sample inference and nonstandard asymptotics*, Journal of
+   Econometrics, vol. 133 no. 2 (2006) pp. 443-477
