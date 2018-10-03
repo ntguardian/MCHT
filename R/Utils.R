@@ -56,6 +56,7 @@ check_params_in_functions <- function(params, func_list) {
   testthat::expect_is(func_list, "list")
   for (f in func_list) {
     testthat::expect_is(f, "function")
-    testthat::expect_true(all(params %in% names(formals(f))))
+    testthat::expect_true(all(params %in% names(formals(f))) |
+      ("..." %in% names(formals(f))))
   }
 }
