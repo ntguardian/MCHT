@@ -115,7 +115,7 @@ test_that("An MCHTest-class object functions properly", {
 
   set.seed(1234)
   registerDoParallel(1)
-  expect_silent(mc.test.1(dat))
+  expect_success(mc.test.1(dat))
   expect_error(mc.test.3(dat), "argument \"mu\" is missing")
   expect_true(mc.test.2(dat - 0.5)$p.value != mc.test.2(dat - 0.5)$p.value)
   expect_equal(mc.test.1(dat)$statistic, c(S = 3.28607799050981))
@@ -144,7 +144,7 @@ test_that("An MCHTest-class object functions properly", {
 })
 
 test_that("get_MCHTest_settings() functions properly", {
-  f_setting <- get_MCHTest_settings(MCHTest(test_stat_2, test_gen_2, rand_gen_2,
+  f_setting <- get_MCHTest_settings(MCHTest(test_stat_2, test_gen_2, rand_gen_1,
                                             seed = 100, memoise_sample = TRUE,
                                             N = 10000, test_params = "mu",
                                             lock_alternative = FALSE))
