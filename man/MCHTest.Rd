@@ -124,17 +124,77 @@ defines a Monte Carlo test.
 maybe some parameters and return an \code{htest}-class object containing the
 results of a Monte Carlo statistical test. These object will accept datasets
 and perhaps some parameters and will return the results of a test.
+
+When the default function for computing \eqn{p}-values is used (see
+\code{\link{pval}}), this is effectively the test described in
+\insertCite{dufour06;textual}{MCHT}. This includes using simulated annealing
+to find values of nuisance parameters that maximize the \eqn{p}-value if the
+null hypothesis is true. Simulated annealing is implemented using
+\code{\link[GenSA]{GenSA}} from the \pkg{GenSA} package, and the
+\code{optim_control} parameter is used for controlling \code{GenSA}'s
+behavior. We highly recommend reading \code{GenSA}'s documentation.
+
+The \code{threshold_pval} argument can be used for stopping the optimization
+procedure when a specified \eqn{p}-value is reached or surpassed.
+\insertCite{dufour06;textual}{MCHT} showed that \eqn{p}-values found using
+the procedure implemented here are conservative (in the sense that they are
+larger than they necessarily need to be). If the algorithm terminates early
+due to surpassing a prespecified \eqn{p}-value, then the estimated
+\eqn{p}-value is known to at least be the value returned, but because the
+\eqn{p}-value is a conservative estimate of the "true" \eqn{p}-value, this
+latter number could be smaller. Thus we cannot say much about the location of
+the true \eqn{p}-value if the algorithm terminates early. For this reason, a
+\code{MCHTest}-class function will, by default, issue a warning if the
+algorithm terminated early. However, by setting
+\code{suppress_threshold_warning} to \code{TRUE}, this behavior can be
+disabled. This recognizes the fact that even though an early termination
+leads to us not being able to say much about the location of the true
+\eqn{p}-value, we know that whatever the more accurate estimate is, we would
+not reject the null hypothesis based on that result.
 }
 \examples{
-TODO: curtis: MORE EXAMPLES -- Sun 30 Sep 2018 01:29:04 AM MDT
 dat1 <- c(0.16, 1.00, 0.67, 1.28, 0.31, 1.16, 1.25, 0.93, 0.66, 0.54)
-mc.t.test <- MCHTest(test_stat = function(x, mu = 0) {
+# Monte Carlo t-test for exponentially distributed data
+mc.t.test <- MCHTest(test_stat = function(x, mu = 1) {
                        sqrt(length(x)) * (mean(x) - mu)/sd(x)
-                     }, stat_gen = function(n, mu = 0) {
-                       x <- rnorm(n, mean = mu)
-                       sqrt(n) *  (mean(x) - mu)/sd(x)
-                     }, seed = 123, method = "Monte Carlo t-Test",
-                     test_params = "mu", lock_alternative = FALSE)
+                     }, stat_gen = function(x, mu = 1) {
+                       x <- x * mu
+                       sqrt(length(x)) *  (mean(x) - mu)/sd(x)
+                     }, rand_gen = rexp, seed = 123,
+                     method = "Monte Carlo t-Test", test_params = "mu",
+                     lock_alternative = FALSE)
 mc.t.test(dat1)
 mc.t.test(dat1, mu = 0.1, alternative = "two.sided")
+
+# Testing for the scale parameter of a Weibull distribution
+# Two-sided test for location of scale parameter
+library(fitdistrplus)
+ts <- function(x, scale = 1) {
+  fit_null <- coef(fitdist(x, "weibull", fix.arg = list("scale" = scale)))
+  kt <- fit_null[["shape"]]
+  l0 <- scale
+  fit_all <- coef(fitdist(x, "weibull"))
+  kh <- fit_all[["shape"]]
+  lh <- fit_all[["scale"]]
+  n <- length(x)
+
+  # Test statistic, based on the negative-log-likelihood ratio
+  suppressWarnings(n * ((kt - 1) * log(l0) - (kh - 1) * log(lh) -
+      log(kt/kh) - log(lh/l0)) - (kt - kh) * sum(log(x)) + l0^(-kt) *
+      sum(x^kt) - lh^(-kh) * sum(x^kh))
+}
+
+sg <- function(x, scale = 1, shape = 1) {
+  x <- qweibull(x, shape = shape, scale = scale)
+  ts(x)
+}
+
+mc.wei.shape.test <- MCHTest(ts, sg, seed = 123, test_params = "scale",
+                             nuisance_params = "shape",
+                             optim_control = list(
+                               lower = c("shape" = 0),
+                               upper = c("shape" = 100)
+                             ), threshold_pval = .2, N = 1000)
+
+mc.wei.shape.test(rweibull(100, shape = 4), shape = 2)
 }

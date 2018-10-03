@@ -12,7 +12,9 @@ Imports:
     foreach,
     GenSA,
     purrr
-License: MIT + License
+RdMacros:
+    Rdpack
+License: MIT + file License
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.0

@@ -151,47 +151,36 @@
 #' mc.t.test(dat1, mu = 0.1, alternative = "two.sided")
 #'
 #' # Testing for the scale parameter of a Weibull distribution
-# Two-sided test for location of scale parameter
-library(stats4)
-ts <- function(x, scale = 1) {
-  nll_h0 <- function(k = 1) {
-    -sum(log(dweibull(x, shape = k, scale = scale)))
-  }
-
-  nll_all <- function(k = 1, lambda = 1) {
-    -sum(log(dweibull(x, shape = k, scale = lambda)))
-  }
-
-  fit_null <- coef(mle(nll_h0, start = list("k" = 5)))
-  kt <- fit_null[["k"]]
-  l0 <- scale
-  fit_all <- coef(mle(nll_all, start = list("k" = 5, "lambda" = 5)))
-  kh <- fit_all[["k"]]
-  lh <- fit_all[["lambda"]]
-  n <- length(x)
-
-  # Test statistic
-  suppressWarnings(n * ((kt - 1) * log(l0) - (kh - 1) * log(lh) -
-      log(kt/kh) - log(lh/l0)) - (kt - kh) * sum(log(x)) + l0^(-kt) *
-      sum(x^kt) - lh^(-kh) * sum(x^kh))
-}
-
-sg <- function(x, scale = 1, shape = 1) {
-  x <- qweibull(x, shape = shape, scale = scale)
-  ts(x)
-}
-
-mc.wei.shape.test <- MCHTest(ts, sg, seed = 123, test_params = "scale",
-                             nuisance_params = "shape",
-                             optim_control = list(
-                               lower = c("shape" = 0),
-                               upper = c("shape" = 100)
-                             ), threshold_pval = .2)
-
-dat2 <- c(1.86, 1.54, 0.81, 0.92, 1.66, 0.86, 1.16, 2.22, 2.69, 2.76, 
-         2.99, 0.93, 2.31, 0.73, 2.91, 1.49, 2.74, 2.37, 1.71, 1.00)
-
-mc.wei.shape.test(dat2, shape = 1.5)
+#' # Two-sided test for location of scale parameter
+#' library(fitdistrplus)
+#' ts <- function(x, scale = 1) {
+#'   fit_null <- coef(fitdist(x, "weibull", fix.arg = list("scale" = scale)))
+#'   kt <- fit_null[["shape"]]
+#'   l0 <- scale
+#'   fit_all <- coef(fitdist(x, "weibull"))
+#'   kh <- fit_all[["shape"]]
+#'   lh <- fit_all[["scale"]]
+#'   n <- length(x)
+#' 
+#'   # Test statistic, based on the negative-log-likelihood ratio
+#'   suppressWarnings(n * ((kt - 1) * log(l0) - (kh - 1) * log(lh) -
+#'       log(kt/kh) - log(lh/l0)) - (kt - kh) * sum(log(x)) + l0^(-kt) *
+#'       sum(x^kt) - lh^(-kh) * sum(x^kh))
+#' }
+#' 
+#' sg <- function(x, scale = 1, shape = 1) {
+#'   x <- qweibull(x, shape = shape, scale = scale)
+#'   ts(x)
+#' }
+#' 
+#' mc.wei.shape.test <- MCHTest(ts, sg, seed = 123, test_params = "scale",
+#'                              nuisance_params = "shape",
+#'                              optim_control = list(
+#'                                lower = c("shape" = 0),
+#'                                upper = c("shape" = 100)
+#'                              ), threshold_pval = .2, N = 1000)
+#' 
+#' mc.wei.shape.test(rweibull(100, shape = 4), shape = 2)
 MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
                     seed = NULL, memoise_sample = TRUE, pval_func = MCHT::pval,
                     method = "Monte Carlo Test", test_params = NULL,

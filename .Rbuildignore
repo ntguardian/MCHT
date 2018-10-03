@@ -1,4 +1,7 @@
 ^.*\.Rproj$
 ^STYLE.md$
 ^STYLE.pdf$
+^README.Rmd$
+^REAME.md$
+^NEWS.md$
 ^\.Rproj\.user$
