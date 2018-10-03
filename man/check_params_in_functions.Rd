@@ -16,5 +16,5 @@ Test that certain parameters are arguments for certain functions via
 \pkg{testthat} functions.
 }
 \examples{
-check_params_in_functions(c("x"), list(mean))
+MCHT:::check_params_in_functions(c("x"), list(mean))
 }

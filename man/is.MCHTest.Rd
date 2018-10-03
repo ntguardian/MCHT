@@ -17,5 +17,7 @@ is.MCHTest(x)
 Checks whether its argument is an \code{\link{MCHTest}}-class object.
 }
 \examples{
+f <- MCHTest(mean, mean, seed = 100)
 is.MCHTest(1)
+is.MCHTest(f)
 }

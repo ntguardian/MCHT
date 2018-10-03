@@ -16,5 +16,6 @@ A list with all the variables relevant to \code{x}
 Get the settings of an \code{\link{MCHTest}}-class object.
 }
 \examples{
-get_MCHTest_settings()  # TODO: EXAMPLE
+f <- MCHTest(mean, mean, seed = 100)
+get_MCHTest_settings(f)
 }

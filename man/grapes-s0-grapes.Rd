@@ -18,6 +18,6 @@ A string combining \code{x} and \code{y}
 Concatenate and form strings (no space separation)
 }
 \examples{
-`\%s0\%` <- CPAT:::`\%s0\%`
+`\%s0\%` <- MCHT:::`\%s0\%`
 "Hello" \%s0\% "world"
 }

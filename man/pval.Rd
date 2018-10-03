@@ -4,7 +4,7 @@
 \alias{pval}
 \title{Compute \eqn{p}-Value For a Test Statistic}
 \usage{
-pval(S, sample_S, alternative = NULL)
+pval(S, sample_S, alternative = NULL, unif_gen = runif)
 }
 \arguments{
 \item{S}{The value of the test statistic}
@@ -13,6 +13,9 @@ pval(S, sample_S, alternative = NULL)
 
 \item{alternative}{A string specifying the alternative hypothesis, or
 \code{NULL}}
+
+\item{unif_gen}{The function generating uniformly-distributed random
+variables; if \code{NULL}, \code{\link[stats]{runif}}}
 }
 \value{
 A number representing the \eqn{p}-value.
@@ -25,15 +28,19 @@ Let \eqn{S} be a test statistic and \eqn{S_i} be simulated values of that
 test statistic under the null hypothesis, with \eqn{1 \leq i \leq N}. By
 default, this function computes \eqn{p}-values via
 
-\deqn{p = \hat{p} = \frac{1}{N}\sum_{i = 1}^{N} \mathbb{1}_{\{S \geq S_i\}}}
+\deqn{p = \hat{p} = \frac{1}{N}\sum_{i = 1}^{N} \mathbb{1}_{\{(S, U_0) \geq
+(S_i, U_i)\}}}
 
 where \eqn{\mathbb{1}_{\left{S \in A\right}} = 1} if \eqn{S \in A} and is 0
-otherwise. This function is designed to handle an \code{alternative}
-parameter similar to what appears in other \pkg{stats} functions like
-\code{\link[stats]{t.test}}. If \code{alternative} is \code{"less"}, then
-\eqn{p = \hat{p}}; if \code{alternative} is \code{"greater"}, then \eqn{p =
-1 - \hat{p}}; and if \code{alternative} is \code{"two.sided"}, then \eqn{p =
-2 \min(\hat{p}, 1 - \hat{p})}. Any other value raises an error.
+otherwise, $U_i$ are uniformly distributed random variables, and the ordering
+over tuples is lexicographical ordering, as described by
+\insertCite{dufour06;textual}{MCHT}. This function is designed to handle an
+\code{alternative} parameter similar to what appears in other \pkg{stats}
+functions like \code{\link[stats]{t.test}}. If \code{alternative} is 
+\code{"less"}, then \eqn{p = \hat{p}}; if \code{alternative} is
+\code{"greater"}, then \eqn{p = 1 - \hat{p}}; and if \code{alternative} is
+\code{"two.sided"}, then \eqn{p = 2 \min(\hat{p}, 1 - \hat{p})}. Any other
+value raises an error.
 
 The parameter \code{S} is \eqn{S}, and the vector \code{sample_S} is the
 vector containing the values \eqn{S_i}.

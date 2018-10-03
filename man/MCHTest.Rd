@@ -4,11 +4,12 @@
 \alias{MCHTest}
 \title{Create an MCHTest Object}
 \usage{
-MCHTest(test_stat, stat_gen, rand_gen, N = 10000, seed = NULL,
-  memoise_sample = TRUE, pval_func = pval,
+MCHTest(test_stat, stat_gen, rand_gen = runif, N = 10000,
+  seed = NULL, memoise_sample = TRUE, pval_func = MCHT::pval,
   method = "Monte Carlo Test", test_params = NULL,
   fixed_params = NULL, nuisance_params = NULL, optim_control = NULL,
-  lock_alternative = TRUE)
+  lock_alternative = TRUE, threshold_pval = 1,
+  suppress_threshold_warning = FALSE)
 }
 \arguments{
 \item{test_stat}{A function that computes the test statistic from input data;
@@ -94,6 +95,17 @@ sensitive to values of \code{alternative}; this
 argument exists to prevent shooting yourself in the
 foot and accidentally computing \eqn{p}-values in
 inappropriate ways}
+
+\item{threshold_pval}{A numeric value that represents a threshold
+\eqn{p}-value that, if surpassed by the optimization
+algorithm, will cause the algorithm to terminate; will
+override the \code{threshold.stop} argument in the
+\code{control} list that's used by
+\code{\link[GenSA]{GenSA}}}
+
+\item{suppress_threshold_warning}{If \code{TRUE}, user will not be warned if
+the threshold \eqn{p}-value was surpassed
+by the optimization algorithm}
 }
 \value{
 A \code{MCHTest}-class object, a function with parameters \code{x},

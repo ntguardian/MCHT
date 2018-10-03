@@ -13,5 +13,6 @@
 Print an \code{link{MCHTest}}-class object.
 }
 \examples{
-MCHT:::print.MCHTest()  # TODO: EXAMPLE
+f <- MCHTest(mean, mean, seed = 100)
+print(f)
 }
