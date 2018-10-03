@@ -10,7 +10,8 @@ Imports:
     doRNG,
     memoise,
     foreach,
-    GenSA
+    GenSA,
+    purrr
 License: MIT + License
 Encoding: UTF-8
 LazyData: true
