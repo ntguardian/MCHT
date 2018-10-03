@@ -11,7 +11,9 @@ Imports:
     memoise,
     foreach,
     GenSA,
-    purrr
+    purrr,
+    stats,
+    utils
 RdMacros:
     Rdpack
 License: MIT + file License
