@@ -180,7 +180,7 @@
 #'                                upper = c("shape" = 100)
 #'                              ), threshold_pval = .2, N = 1000)
 #' 
-#' mc.wei.shape.test(rweibull(100, shape = 4), shape = 2)
+#' mc.wei.shape.test(rweibull(100, scale = 4, shape = 2), scale = 2)
 MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
                     seed = NULL, memoise_sample = TRUE, pval_func = MCHT::pval,
                     method = "Monte Carlo Test", test_params = NULL,

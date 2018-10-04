@@ -37,9 +37,9 @@ Instead of using <img src="svgs/b8bc815b5e9d5177af01fd4d3d3c2f10.svg" align=midd
 the same test statistic computed from simulated data following the distribution
 prescribed by the null hypothesis of the test. For the sake of simplicity in
 this presentation, assume that <img src="svgs/e257acd1ccbe7fcb654708f1a866bfe9.svg" align=middle width=11.027402099999989pt height=22.465723500000017pt/> is a continuous random variable. Now our
-<img src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-value is <img src="svgs/422c7ea56f597c35a6c675a532225eb9.svg" align=middle width=80.78808375pt height=31.141535699999984pt/>, where <img src="svgs/58cde395c6c761b95ba2dcfde3b9699e.svg" align=middle width=211.48993635000002pt height=32.256008400000006pt/> and <img src="svgs/bc3c694d37b92361e3102381d7c007e6.svg" align=middle width=28.21459079999999pt height=30.267491100000004pt/> is an
-independent random copy of <img src="svgs/49aebd2501b0bf3a5225ca26ba123672.svg" align=middle width=18.205948199999987pt height=22.465723500000017pt/> computed from simulated data with a sample size
-of <img src="svgs/55a049b8f161ae7cfeb0197d75aff967.svg" align=middle width=9.86687624999999pt height=14.15524440000002pt/>.
+<img src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-value is <img src="svgs/422c7ea56f597c35a6c675a532225eb9.svg" align=middle width=80.78808375pt height=31.141535699999984pt/>, where <img src="svgs/fa268ea8502a266665526053011ee08d.svg" align=middle width=206.580495pt height=32.19743999999999pt/> where <img src="svgs/21fd4e8eecd6bdf1a4d3d6bd1fb8d733.svg" align=middle width=8.484300000000001pt height=22.381919999999983pt/> is the indicator function and
+<img src="svgs/bc3c694d37b92361e3102381d7c007e6.svg" align=middle width=28.21459079999999pt height=30.267491100000004pt/> is an independent random copy of <img src="svgs/49aebd2501b0bf3a5225ca26ba123672.svg" align=middle width=18.205948199999987pt height=22.465723500000017pt/> computed from simulated
+data with a sample size of <img src="svgs/55a049b8f161ae7cfeb0197d75aff967.svg" align=middle width=9.86687624999999pt height=14.15524440000002pt/>.
 
 The power of these tests increase with <img src="svgs/f9c4988898e7f532b9f826a75014ed3c.svg" align=middle width=14.99998994999999pt height=22.465723500000017pt/> (see [1]) but modern computers are
 able to simulate large <img src="svgs/f9c4988898e7f532b9f826a75014ed3c.svg" align=middle width=14.99998994999999pt height=22.465723500000017pt/> quickly, so this is rarely an issue. The procedure
@@ -66,6 +66,13 @@ For example, the code below creates the Monte Carlo equivalent of a <img src="sv
 
 ```r
 library(MCHT)
+#> .------..------..------..------.
+#> |M.--. ||C.--. ||H.--. ||T.--. |
+#> | (\/) || :/\: || :/\: || :/\: |
+#> | :\/: || :\/: || (__) || (__) |
+#> | '--'M|| '--'C|| '--'H|| '--'T|
+#> `------'`------'`------'`------' v. 0.0.0.9000
+#> Type citation("MCHT") for citing this R package in publications
 library(doParallel)
 #> Loading required package: foreach
 #> Loading required package: iterators
@@ -133,11 +140,6 @@ mc.t.test(dat, mu = 1)
 #> Loading required package: rngtools
 #> Loading required package: pkgmaker
 #> Loading required package: registry
-#> 
-#> Attaching package: 'pkgmaker'
-#> The following object is masked from 'package:base':
-#> 
-#>     isFALSE
 #> 
 #> 	Monte Carlo One Sample t-Test
 #> 

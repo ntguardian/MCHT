@@ -186,7 +186,7 @@ ts <- function(x, scale = 1) {
 
 sg <- function(x, scale = 1, shape = 1) {
   x <- qweibull(x, shape = shape, scale = scale)
-  ts(x)
+  ts(x, scale = scale)
 }
 
 mc.wei.shape.test <- MCHTest(ts, sg, seed = 123, test_params = "scale",
