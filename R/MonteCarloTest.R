@@ -170,7 +170,7 @@
 #' 
 #' sg <- function(x, scale = 1, shape = 1) {
 #'   x <- qweibull(x, shape = shape, scale = scale)
-#'   ts(x)
+#'   ts(x, scale = scale)
 #' }
 #' 
 #' mc.wei.shape.test <- MCHTest(ts, sg, seed = 123, test_params = "scale",
@@ -524,7 +524,7 @@ print.MCHTest <- function(f, prefix = "\t") {
   }
   if (length(f_info$nuisance_params) > 0 & f_info$threshold_pval < 1) {
     cat("Threshold p-Value: ", f_info$threshold_pval, "\n")
-    if (suppress_threshold_warning) {
+    if (f_info$suppress_threshold_warning) {
       cat("Threshold p-value warnings suppressed\n")
     }
   }
