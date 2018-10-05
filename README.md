@@ -183,10 +183,15 @@ tests. See other documentation for details.
 
 ## Planned Future Features
 
-* Permutation tests are a form of Monte Carlo test; perhaps we could add a class
-  for constructing permutation tests like we did for Monte Carlo tests.
-* Bootstrap tests are yet another form of Monte Carlo tests; we could give some
-  constructor for making bootstrap tests too.
+* A function for making diagnostic-type plots for tests, such as a function
+    creating a plot for the rejection probability function (RPF) as described in
+    [5]
+* A function that accepts a `MCHTest`-class object and returns a function that,
+    rather than returning a `htest`-class object, returns a function that will
+    give the test statistic, simulated test statistics, and a <img
+    src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle
+    width=8.270567249999992pt height=14.15524440000002pt/>-value, in a list;
+    could be useful for diagnostic work.
 
 ## References
 
@@ -198,3 +203,5 @@ tests. See other documentation for details.
 3. J. G. MacKinnon, *Bootstrap hypothesis testing* in *Handbook of computational
    econometrics* (2009) pp. 183-213
 4. R. A. Fisher, *The design of experiments* (1935)
+5. R. Davidson and J. G. MacKinnon, *The size distortion of bootstrap test*,
+   Econometric Theory, vol. 15 (1999) pp. 361-376
