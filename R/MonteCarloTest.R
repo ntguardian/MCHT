@@ -159,6 +159,8 @@
 #'         \code{stat_gen}, controlling what's tested and how; depending on
 #'         \code{lock_alternative}, the \code{alternative} argument may be
 #'         ignored
+#' @references
+#'   \insertAllCited{}
 #' @export
 #' @examples
 #' dat <- c(0.16, 1.00, 0.67, 1.28, 0.31, 1.16, 1.25, 0.93, 0.66, 0.54)

@@ -48,6 +48,8 @@
 #'                 uniformly-distributed random variables for breaking ties; if
 #'                 \code{NULL}, no tie breaking is done
 #' @return A number representing the \eqn{p}-value.
+#' @references
+#'   \insertAllCited{}
 #' @export
 #' @examples
 #' sample_S <- rnorm(10)

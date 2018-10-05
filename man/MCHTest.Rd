@@ -273,3 +273,6 @@ permute.test <- MCHTest(ts, ts, rg, seed = 123, N = 1000,
 
 permute.test(df, alternative = "two.sided")
 }
+\references{
+\insertAllCited{}
+}

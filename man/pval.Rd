@@ -55,3 +55,6 @@ sample_S <- rnorm(10)
 pval(1.01, sample_S)
 pval(1.01, sample_S, alternative = "greater")
 }
+\references{
+\insertAllCited{}
+}
