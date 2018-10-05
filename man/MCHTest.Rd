@@ -4,7 +4,7 @@
 \alias{MCHTest}
 \title{Create an MCHTest Object}
 \usage{
-MCHTest(test_stat, stat_gen, rand_gen = runif, N = 10000,
+MCHTest(test_stat, stat_gen, rand_gen = stats::runif, N = 10000,
   seed = NULL, memoise_sample = TRUE, pval_func = MCHT::pval,
   method = "Monte Carlo Test", test_params = NULL,
   fixed_params = NULL, nuisance_params = NULL, optim_control = NULL,
@@ -186,7 +186,9 @@ mc.t.test(dat, mu = 0.1, alternative = "two.sided")
 
 # Testing for the scale parameter of a Weibull distribution
 # Two-sided test for location of scale parameter
+library(MASS)
 library(fitdistrplus)
+
 ts <- function(x, scale = 1) {
   fit_null <- coef(fitdist(x, "weibull", fix.arg = list("scale" = scale)))
   kt <- fit_null[["shape"]]
@@ -211,10 +213,11 @@ mc.wei.shape.test <- MCHTest(ts, sg, seed = 123, test_params = "scale",
                              nuisance_params = "shape",
                              optim_control = list(
                                lower = c("shape" = 0),
-                               upper = c("shape" = 100)
+                               upper = c("shape" = 100),
+                               control = list("max.time" = 10)
                              ), threshold_pval = .2, N = 1000)
 
-mc.wei.shape.test(rweibull(100, shape = 4), shape = 2)
+mc.wei.shape.test(rweibull(100, scale = 4, shape = 2), scale = 2)
 
 # Bootstrap hypothesis test
 # Kolmogorov-Smirnov test for Weibull distribution via parametric botstrap
@@ -227,10 +230,6 @@ ts <- function(x) {
           alternative = "two.sided")$statistic[[1]]
 }
 
-sg <- function(x, delta = 0) {
-  ts(x)
-}
-
 rg <- function(x) {
   n <- length(x)
   param <- coef(fitdist(x, "weibull"))
@@ -238,7 +237,7 @@ rg <- function(x) {
   rweibull(n, shape = shape, scale = scale)
 }
 
-b.ks.test <- MCHTest(test_stat = ts, stat_gen = sg, rand_gen = rg,
+b.ks.test <- MCHTest(test_stat = ts, stat_gen = ts, rand_gen = rg,
                      seed = 123, N = 1000)
 b.ks.test(rbeta(100, 2, 2))
 
@@ -249,16 +248,12 @@ df <- data.frame(
   group = rep(c("x", "y"), times = c(5, 10))
 )
 
-ts <- function(x, delta = 0) {
+ts <- function(x) {
   means <- aggregate(val ~ group, data = x, mean)
   vars <- aggregate(val ~ group, data = x, var)
   counts <- aggregate(val ~ group, data = x, length)
 
-  (means$val[1] - means$val[2] - delta)/sum(vars$val / sqrt(counts$val))
-}
-
-sg <- function(x, delta = 0) {
-  ts(x, delta)
+  (means$val[1] - means$val[2])/sum(vars$val / sqrt(counts$val))
 }
 
 rg <- function(x) {
@@ -266,8 +261,7 @@ rg <- function(x) {
   x
 }
 
-permute.test <- MCHTest(ts, sg, rg, seed = 123, N = 1000,
-                        test_params = "delta",
+permute.test <- MCHTest(ts, ts, rg, seed = 123, N = 1000,
                         lock_alternative = FALSE)
 
 permute.test(df, alternative = "two.sided")

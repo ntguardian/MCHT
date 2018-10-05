@@ -19,10 +19,10 @@
 #' test statistic under the null hypothesis, with \eqn{1 \leq i \leq N}. If
 #' \code{unif_gen} is not \code{NULL}, this function computes \eqn{p}-values via
 #'
-#' \deqn{p = \hat{p} = \frac{1}{N}\sum_{i = 1}^{N} \mathbb{1}_{\{(S, U_0) \leq
+#' \deqn{p = \hat{p} = \frac{1}{N}\sum_{i = 1}^{N} I_{\{(S, U_0) \leq
 #' (S_i, U_i)\}}}
 #'
-#' where \eqn{\mathbb{1}_{\left{S \in A\right}} = 1} if \eqn{S \in A} and is 0
+#' where \eqn{I_{\{S \in A\}} = 1} if \eqn{S \in A} and is 0
 #' otherwise, \eqn{U_i} are uniformly distributed random variables, and the
 #' ordering over tuples is lexicographical ordering, as described by
 #' \insertCite{dufour06;textual}{MCHT}.
@@ -100,7 +100,7 @@ pval <- function(S, sample_S, alternative = NULL, unif_gen = NULL) {
 #'         memoization; accepts \code{seed} and all other arguments that could
 #'         be passed to the original random number generator
 #' @examples
-#' memo_runif <- gen_memo_runif(runif)
+#' memo_runif <- MCHT:::gen_memo_rng(runif)
 #' memo_runif(10)
 gen_memo_rng <- function(r, seed = NULL) {
   force(r)
@@ -112,7 +112,7 @@ gen_memo_rng <- function(r, seed = NULL) {
   f <- function(...) {
     args <- list(...)
     if (!exists(".Random.seed")) {
-      runif(1)  # Call a random number that won't be used; initiates RNG
+      stats::runif(1)  # Call a random number that won't be used; initiates RNG
     }
     if (!is.null(seed)) {
       old_seed <<- .Random.seed

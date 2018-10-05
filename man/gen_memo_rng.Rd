@@ -26,6 +26,6 @@ random numbers. This allows both for control over random number generation
 and for faster performance.
 }
 \examples{
-memo_runif <- gen_memo_runif(runif)
+memo_runif <- MCHT:::gen_memo_rng(runif)
 memo_runif(10)
 }

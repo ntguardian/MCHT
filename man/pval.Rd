@@ -29,10 +29,10 @@ Let \eqn{S} be a test statistic and \eqn{S_i} be simulated values of that
 test statistic under the null hypothesis, with \eqn{1 \leq i \leq N}. If
 \code{unif_gen} is not \code{NULL}, this function computes \eqn{p}-values via
 
-\deqn{p = \hat{p} = \frac{1}{N}\sum_{i = 1}^{N} \mathbb{1}_{\{(S, U_0) \leq
+\deqn{p = \hat{p} = \frac{1}{N}\sum_{i = 1}^{N} I_{\{(S, U_0) \leq
 (S_i, U_i)\}}}
 
-where \eqn{\mathbb{1}_{\left{S \in A\right}} = 1} if \eqn{S \in A} and is 0
+where \eqn{I_{\{S \in A\}} = 1} if \eqn{S \in A} and is 0
 otherwise, \eqn{U_i} are uniformly distributed random variables, and the
 ordering over tuples is lexicographical ordering, as described by
 \insertCite{dufour06;textual}{MCHT}.

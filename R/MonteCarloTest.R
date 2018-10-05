@@ -169,7 +169,9 @@
 #'
 #' # Testing for the scale parameter of a Weibull distribution
 #' # Two-sided test for location of scale parameter
+#' library(MASS)
 #' library(fitdistrplus)
+#'
 #' ts <- function(x, scale = 1) {
 #'   fit_null <- coef(fitdist(x, "weibull", fix.arg = list("scale" = scale)))
 #'   kt <- fit_null[["shape"]]
@@ -194,10 +196,11 @@
 #'                              nuisance_params = "shape",
 #'                              optim_control = list(
 #'                                lower = c("shape" = 0),
-#'                                upper = c("shape" = 100)
+#'                                upper = c("shape" = 100),
+#'                                control = list("max.time" = 10)
 #'                              ), threshold_pval = .2, N = 1000)
 #' 
-#' mc.wei.shape.test(rweibull(100, shape = 4), shape = 2)
+#' mc.wei.shape.test(rweibull(100, scale = 4, shape = 2), scale = 2)
 #' 
 #' # Bootstrap hypothesis test
 #' # Kolmogorov-Smirnov test for Weibull distribution via parametric botstrap
@@ -245,8 +248,7 @@
 #'                         lock_alternative = FALSE)
 #' 
 #' permute.test(df, alternative = "two.sided")
-#' mc.wei.shape.test(rweibull(100, scale = 4, shape = 2), scale = 2)
-MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
+MCHTest <- function(test_stat, stat_gen, rand_gen = stats::runif, N = 10000,
                     seed = NULL, memoise_sample = TRUE, pval_func = MCHT::pval,
                     method = "Monte Carlo Test", test_params = NULL,
                     fixed_params = NULL, nuisance_params = NULL,
@@ -312,7 +314,7 @@ MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
   }
 
   # Prepare p-value function
-  memo_runif <- gen_memo_rng(runif, seed = seed)
+  memo_runif <- gen_memo_rng(stats::runif, seed = seed)
   if ("unif_gen" %in% names(formals(pval_func)) & tiebreaking) {
     orig_pval_func <- pval_func
     pval_func <- purrr::partial(orig_pval_func, unif_gen = memo_runif)
@@ -551,13 +553,20 @@ get_MCHTest_settings <- function(x) {
 #'
 #' Print an \code{link{MCHTest}}-class object.
 #'
-#' @param f The \code{MCHTest}-class object
+#' @param x The \code{MCHTest}-class object
+#' @param ... Other arguments, such as \code{prefix} (a string wrapped around
+#'            the first line; by default, \code{"\t"})
 #' @export
 #' @examples
 #' f <- MCHTest(mean, mean, seed = 100)
 #' print(f)
-print.MCHTest <- function(f, prefix = "\t") {
-  f_info <- get_MCHTest_settings(f)
+print.MCHTest <- function(x, ...) {
+  f_info <- get_MCHTest_settings(x)
+  args <- list(...)
+  if (is.null(args$prefix)) {
+    args$prefix <- "\t"
+  }
+  prefix <- args$prefix
 
   cat("\n")
   cat(strwrap("Details for" %s% f_info$method, prefix = prefix), sep = "\n")

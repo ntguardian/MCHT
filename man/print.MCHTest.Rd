@@ -4,10 +4,13 @@
 \alias{print.MCHTest}
 \title{Print \code{MCHTest}-Class Object}
 \usage{
-\method{print}{MCHTest}(f, prefix = "\\t")
+\method{print}{MCHTest}(x, ...)
 }
 \arguments{
-\item{f}{The \code{MCHTest}-class object}
+\item{x}{The \code{MCHTest}-class object}
+
+\item{...}{Other arguments, such as \code{prefix} (a string wrapped around
+the first line; by default, \code{"\t"})}
 }
 \description{
 Print an \code{link{MCHTest}}-class object.

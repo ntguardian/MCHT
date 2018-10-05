@@ -13,11 +13,14 @@ Imports:
     GenSA,
     purrr,
     stats,
-    utils
+    utils,
+    Rdpack
 RdMacros:
     Rdpack
-License: MIT + file License
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.0
-Suggests: testthat
+Suggests:
+    MASS,
+    fitdistrplus
