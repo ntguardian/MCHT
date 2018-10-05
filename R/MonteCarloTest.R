@@ -187,7 +187,7 @@
 #' 
 #' sg <- function(x, scale = 1, shape = 1) {
 #'   x <- qweibull(x, shape = shape, scale = scale)
-#'   ts(x)
+#'   ts(x, scale = scale)
 #' }
 #' 
 #' mc.wei.shape.test <- MCHTest(ts, sg, seed = 123, test_params = "scale",
@@ -245,6 +245,7 @@
 #'                         lock_alternative = FALSE)
 #' 
 #' permute.test(df, alternative = "two.sided")
+#' mc.wei.shape.test(rweibull(100, scale = 4, shape = 2), scale = 2)
 MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
                     seed = NULL, memoise_sample = TRUE, pval_func = MCHT::pval,
                     method = "Monte Carlo Test", test_params = NULL,
@@ -597,7 +598,7 @@ print.MCHTest <- function(f, prefix = "\t") {
   }
   if (length(f_info$nuisance_params) > 0 & f_info$threshold_pval < 1) {
     cat("Threshold p-Value: ", f_info$threshold_pval, "\n")
-    if (suppress_threshold_warning) {
+    if (f_info$suppress_threshold_warning) {
       cat("Threshold p-value warnings suppressed\n")
     }
   }

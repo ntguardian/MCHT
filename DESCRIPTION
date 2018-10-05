@@ -3,7 +3,7 @@ Title: Monte Carlo Hypothesis Testing
 Version: 0.0.0.9000
 Authors@R: person("Curtis", "Miller", email = "cmiller@math.utah.edu", role = c("aut", "cre"))
 Description: Facilitates Monte Carlo hypothesis testing.
-Depends: R (>= 3.5.1)
+Depends: R (>= 3.2)
 Imports:
     testthat,
     doParallel,

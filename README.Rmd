@@ -50,9 +50,9 @@ the same test statistic computed from simulated data following the distribution
 prescribed by the null hypothesis of the test. For the sake of simplicity in
 this presentation, assume that $S$ is a continuous random variable. Now our
 $p$-value is $1 - \hat{F}_N(s_n)$, where $\hat{F}_N(s_n) = \frac{1}{N}\sum_{j =
-1}^{N}\mathbb{1}_{\{\tilde{S}_{n,j} \leq s_n\}}$ and $\tilde{S}_{n,j}$ is an
-independent random copy of $S_n$ computed from simulated data with a sample size
-of $n$.
+1}^{N}I_{\{\tilde{S}_{n,j} \leq s_n\}}$ where $I$ is the indicator function and
+$\tilde{S}_{n,j}$ is an independent random copy of $S_n$ computed from simulated
+data with a sample size of $n$.
 
 The power of these tests increase with $N$ (see [1]) but modern computers are
 able to simulate large $N$ quickly, so this is rarely an issue. The procedure
