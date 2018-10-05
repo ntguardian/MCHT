@@ -59,6 +59,13 @@
 #' \eqn{p}-value, we know that whatever the more accurate estimate is, we would
 #' not reject the null hypothesis based on that result.
 #'
+#' This function uses \code{\link[foreach]{foreach}},
+#' \code{\link[doRNG]{%dorng%}}, and \code{\link[foreach]{%dopar%}} to
+#' perform simulations. If the R session is not set up at the start for
+#' parallelization, there will be an initial complaint (after which there are no
+#' more complaints), then these functions will default to using a single core.
+#' The example shows how to set up R to use all available cores.
+#'
 #' @param test_stat A function that computes the test statistic from input data;
 #'                  \code{x} must be a parameter of this function representing
 #'                  test data 

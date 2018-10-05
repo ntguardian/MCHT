@@ -1,8 +1,9 @@
 Package: MCHT
-Title: Monte Carlo Hypothesis Testing
-Version: 0.0.0.9000
+Title: Bootstrap and Monte Carlo Hypothesis Testing
+Version: 0.1.0
+Date: 2018-10-05 
 Authors@R: person("Curtis", "Miller", email = "cmiller@math.utah.edu", role = c("aut", "cre"))
-Description: Facilitates Monte Carlo hypothesis testing.
+Description: Facilitates bootstrap and Monte Carlo hypothesis testing.
 Depends: R (>= 3.2)
 Imports:
     testthat,
@@ -18,8 +19,8 @@ Imports:
 RdMacros:
     Rdpack
 License: MIT + file LICENSE
-Encoding: UTF-8
 LazyData: true
+Encoding: UTF-8
 RoxygenNote: 6.1.0
 Suggests:
     MASS,
