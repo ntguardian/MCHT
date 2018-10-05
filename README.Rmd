@@ -63,9 +63,28 @@ different procedure needs to be applied when nuisance parameters are not
 explicitly stated under the null hypothesis. [2] suggests a procedure using
 optimization techniques (recommending simulated annealing specifically) to
 adversarially select values for nuisance parameters valid under the null
-hypothesis that maximize the $p$-value computed from the simulated data. That is
-the procedure employed here. (In fact, the tests created by `MCHTest()` are the
-tests described in [2].)
+hypothesis that maximize the $p$-value computed from the simulated data. This
+procedure is often called *maximized Monte Carlo* (MMC) testing. That is the
+procedure employed here. (In fact, the tests created by `MCHTest()` are the
+tests described in [2].) Unfortunately, MMC, while conservative and exact, has
+much less power than if the unknown parameters were known, perhaps due to the
+behavior of samples under distributions with parameter values distant from the
+true parameter values (see [3]).
+
+## Bootstrap Hypothesis Testing
+
+Bootstrap statistical testing is very similar to Monte Carlo testing; the key
+difference is that bootstrap testing uses information from the sample. For
+example a parametric bootstrap test would estimate the parameters of the
+distribution the data is assumed to follow and generate datasets from that
+distribution using those estimates as the actual parameter values. A permutation
+test (like Fisher's permutation test; see [4]) would use the original dataset
+values but randomly shuffle the labeles (stating which sample an observation
+belongs to) to generate new data sets and thus new simulated test statistics.
+$p$-values are essentially computed the same way.
+
+Unlike Monte Carlo tests and MMC, these tests are not exact tests. That said,
+they often have good finite sample properties. (See [3].)
 
 See the documentation for more details and references.
 
@@ -135,3 +154,6 @@ tests. See other documentation for details.
 2. J-M Dufour, *Monte Carlo tests with nuisance parameters: A general approach
    to finite-sample inference and nonstandard asymptotics*, Journal of
    Econometrics, vol. 133 no. 2 (2006) pp. 443-477
+3. J. G. MacKinnon, *Bootstrap hypothesis testing* in *Handbook of computational
+   econometrics* (2009) pp. 183-213
+4. R. A. Fisher, *The design of experiments* (1935)

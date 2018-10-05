@@ -88,7 +88,8 @@ test_that("MCHTest() functions properly", {
                          lower = c("sigma" = 0), upper = c("sigma" = 100)
                        )), "Parameter vectors cannot")
   expect_error(MCHTest(test_stat_1, rnorm, rand_gen_1, seed = 100))
-  expect_error(MCHTest(test_stat_1, test_gen_1, test_gen_1, seed = 100))
+  expect_silent(MCHTest(test_stat_1, test_gen_1, function(x) {x}, seed = 100))
+  expect_error(MCHTest(test_stat_1, test_gen_1, function(y) {y}, seed = 100))
 })
 
 test_that("An MCHTest-class object functions properly", {
@@ -119,7 +120,7 @@ test_that("An MCHTest-class object functions properly", {
   expect_error(mc.test.3(dat), "argument \"mu\" is missing")
   expect_true(mc.test.2(dat - 0.5)$p.value != mc.test.2(dat - 0.5)$p.value)
   expect_equal(mc.test.1(dat)$statistic, c(S = 3.28607799050981))
-  expect_equal(mc.test.1(dat)$p.value, 0.995)
+  expect_equal(mc.test.1(dat)$p.value, 0.005)
   expect_is(mc.test.1(dat), "htest")
   expect_equal(mc.test.1(dat)$data.name, "dat")
   expect_equal(mc.test.1(dat), mc.test.1(dat, alternative = "two.sided"))

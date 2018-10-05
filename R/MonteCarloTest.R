@@ -15,15 +15,25 @@
 #' Create an MCHTest Object
 #'
 #' This function creates an \code{MCHTest}-class object, an S3 object that
-#' defines a Monte Carlo test.
+#' defines a bootstrap or Monte Carlo test.
 #'
 #' \code{MCHTest}-class objects are effectively functions that accept data and
 #' maybe some parameters and return an \code{htest}-class object containing the
-#' results of a Monte Carlo statistical test. These object will accept datasets
-#' and perhaps some parameters and will return the results of a test.
+#' results of a Monte Carlo or bootstrap statistical test. These object will
+#' accept datasets and perhaps some parameters and will return the results of a
+#' test.
 #'
-#' When the default function for computing \eqn{p}-values is used (see
-#' \code{\link{pval}}), this is effectively the test described in
+#' Bootstrap tests can be implemented when the dataset is passed as an argument
+#' to \code{rand_gen} (which occurs when \code{x} is one of \code{rand_gen}'s
+#' parameters). The only difference between a Monte Carlo test and a bootstrap
+#' test in the context of this function is that bootstrap tests use information
+#' from the original dataset when generating simulated test statistics, while a
+#' Monte Carlo test does not. When the default function for computing
+#' \eqn{p}-values is used, this function will perform a test similar to that
+#' described by \insertCite{mackinnon09;textual}{MCHT}.
+#'
+#' For Monte Carlo tests, when the default function for computing \eqn{p}-values
+#' is used (see \code{\link{pval}}), this is effectively the test described in
 #' \insertCite{dufour06;textual}{MCHT}. This includes using simulated annealing
 #' to find values of nuisance parameters that maximize the \eqn{p}-value if the
 #' null hypothesis is true. Simulated annealing is implemented using
@@ -60,8 +70,9 @@
 #'                 could be useful for allowing a "burn-in" period in random
 #'                 data, as is often the case when working with time series
 #'                 data)
-#' @param rand_gen A function generating random data; \code{n} (representing a
-#'                 sample size) must be a parameter of this function
+#' @param rand_gen A function generating random data, accepting a parameter
+#'                 \code{n} (representing the size of the data) or \code{x}
+#'                 (which would be the actual data)
 #' @param N Integer representing the number of replications of \code{stat_gen}
 #'          to generate
 #' @param seed The random seed used to generate simulated statistic values; if
@@ -100,16 +111,17 @@
 #'                     fixed values; this isn't needed but if these parameters
 #'                     are being used then test output is more informative and
 #'                     errors will be raised if \code{test_stat} and
-#'                     \code{stat_gen} don't accept these parameters, which is
-#'                     safer, and the resulting test will try to pass these
+#'                     \code{stat_gen} don't accept these parameters—which is
+#'                     safer—and the resulting test will try to pass these
 #'                     parameters to \code{rand_gen} (but these \emph{do not}
 #'                     need to be parameters of \code{rand_gen})
 #' @param nuisance_params A character vector of the names of parameters to be
-#'                        treated as nuisance parameters; must be parameters
-#'                        of \code{test_stat} and \code{stat_gen}, but these
-#'                        \emph{will not} be viewed as parameters of
-#'                        \code{rand_gen}, and cannot be non-\code{NULL} if
-#'                        \code{optim_control} is \code{NULL}
+#'                        treated as nuisance parameters which must be chosen
+#'                        via optimization (see \insertCite{dufour06}{MCHT});
+#'                        must be parameters of \code{test_stat} and
+#'                        \code{stat_gen}, but these \emph{will not} be viewed
+#'                        as parameters of \code{rand_gen}, and cannot be
+#'                        non-\code{NULL} if code{optim_control} is \code{NULL}
 #' @param optim_control A list of arguments to be passed to
 #'                      \code{\link[GenSA]{GenSA}}, containing at least
 #'                      \code{lower} and \code{upper} elements as named vectors,
@@ -120,6 +132,11 @@
 #'                      that function will be the parameters mentioned in
 #'                      \code{nuisance_params}, and this argument will be
 #'                      ignored if \code{nuisance_params} is \code{NULL}
+#' @param tiebreaking Break ties using the method as described in
+#'                    \insertCite{dufour06;textual}{MCHT}; won't work if
+#'                    \code{pval_func} doesn't support it via a \code{unif_gen}
+#'                    argument, and should only be used for test statistics not
+#'                    computed on continuously-distributed data
 #' @param threshold_pval A numeric value that represents a threshold
 #'                       \eqn{p}-value that, if surpassed by the optimization
 #'                       algorithm, will cause the algorithm to terminate; will
@@ -137,7 +154,7 @@
 #'         ignored
 #' @export
 #' @examples
-#' dat1 <- c(0.16, 1.00, 0.67, 1.28, 0.31, 1.16, 1.25, 0.93, 0.66, 0.54)
+#' dat <- c(0.16, 1.00, 0.67, 1.28, 0.31, 1.16, 1.25, 0.93, 0.66, 0.54)
 #' # Monte Carlo t-test for exponentially distributed data
 #' mc.t.test <- MCHTest(test_stat = function(x, mu = 1) {
 #'                        sqrt(length(x)) * (mean(x) - mu)/sd(x)
@@ -147,8 +164,8 @@
 #'                      }, rand_gen = rexp, seed = 123,
 #'                      method = "Monte Carlo t-Test", test_params = "mu",
 #'                      lock_alternative = FALSE)
-#' mc.t.test(dat1)
-#' mc.t.test(dat1, mu = 0.1, alternative = "two.sided")
+#' mc.t.test(dat)
+#' mc.t.test(dat, mu = 0.1, alternative = "two.sided")
 #'
 #' # Testing for the scale parameter of a Weibull distribution
 #' # Two-sided test for location of scale parameter
@@ -181,12 +198,60 @@
 #'                              ), threshold_pval = .2, N = 1000)
 #' 
 #' mc.wei.shape.test(rweibull(100, shape = 4), shape = 2)
+#' 
+#' # Bootstrap hypothesis test
+#' # Kolmogorov-Smirnov test for Weibull distribution via parametric botstrap
+#' # hypothesis test
+#' 
+#' ts <- function(x) {
+#'   param <- coef(fitdist(x, "weibull"))
+#'   shape <- param[['shape']]; scale <- param[['scale']]
+#'   ks.test(x, pweibull, shape = shape, scale = scale,
+#'           alternative = "two.sided")$statistic[[1]]
+#' }
+#' 
+#' rg <- function(x) {
+#'   n <- length(x)
+#'   param <- coef(fitdist(x, "weibull"))
+#'   shape <- param[['shape']]; scale <- param[['scale']]
+#'   rweibull(n, shape = shape, scale = scale)
+#' }
+#' 
+#' b.ks.test <- MCHTest(test_stat = ts, stat_gen = ts, rand_gen = rg,
+#'                      seed = 123, N = 1000)
+#' b.ks.test(rbeta(100, 2, 2))
+#'
+#' # Permutation test
+#' 
+#' df <- data.frame(
+#'   val = c(rnorm(5, mean = 2, sd = 3), rnorm(10, mean = 1, sd = 2)),
+#'   group = rep(c("x", "y"), times = c(5, 10))
+#' )
+#' 
+#' ts <- function(x) {
+#'   means <- aggregate(val ~ group, data = x, mean)
+#'   vars <- aggregate(val ~ group, data = x, var)
+#'   counts <- aggregate(val ~ group, data = x, length)
+#' 
+#'   (means$val[1] - means$val[2])/sum(vars$val / sqrt(counts$val))
+#' }
+#' 
+#' rg <- function(x) {
+#'   x$group <- sample(x$group)
+#'   x
+#' }
+#' 
+#' permute.test <- MCHTest(ts, ts, rg, seed = 123, N = 1000,
+#'                         lock_alternative = FALSE)
+#' 
+#' permute.test(df, alternative = "two.sided")
 MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
                     seed = NULL, memoise_sample = TRUE, pval_func = MCHT::pval,
                     method = "Monte Carlo Test", test_params = NULL,
                     fixed_params = NULL, nuisance_params = NULL,
-                    optim_control = NULL, lock_alternative = TRUE,
-                    threshold_pval = 1, suppress_threshold_warning = FALSE) {
+                    optim_control = NULL, tiebreaking = FALSE,
+                    lock_alternative = TRUE, threshold_pval = 1,
+                    suppress_threshold_warning = FALSE) {
   force(pval_func)
 
   # Vector of names of function formals
@@ -206,7 +271,8 @@ MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
   # Requirement checking
   testthat::expect_is(test_stat, "function")
   testthat::expect_is(stat_gen, "function")
-  testthat::expect_true("n" %in% rand_gen_formals)
+  testthat::expect_true(("n" %in% rand_gen_formals) |
+                        ("x" %in% rand_gen_formals))
   testthat::expect_true("x" %in% stat_gen_formals)
   testthat::expect_true("x" %in% test_stat_formals)
   for (param in list(test_params, fixed_params, nuisance_params)) {
@@ -246,7 +312,7 @@ MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
 
   # Prepare p-value function
   memo_runif <- gen_memo_rng(runif, seed = seed)
-  if ("unif_gen" %in% names(formals(pval_func))) {
+  if ("unif_gen" %in% names(formals(pval_func)) & tiebreaking) {
     orig_pval_func <- pval_func
     pval_func <- purrr::partial(orig_pval_func, unif_gen = memo_runif)
   }
@@ -260,7 +326,8 @@ MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
   # generate simulated statistics under H_0
   sample_gen <- function(...) {
     args <- list(...)
-    testthat::expect_true("n" %in% names(args))
+    testthat::expect_true(("n" %in% names(args)) |
+                          ("x" %in% names(args)))
 
     if (is.null(seed)) {seed <- sample(1:999999999, 1)}
     s <- foreach(i = 1:N, .options.RNG = seed) %dorng% {
@@ -268,7 +335,7 @@ MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
     }
     testthat::expect_is(s, "list")
     attr(s, "rng") <- NULL
-    lapply(s, as.numeric)
+    s
   }
 
   # Function responsible for returning simulated statistics under the null
@@ -276,7 +343,8 @@ MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
   stat_sim <- function(sample_gen_args, pval_args, ...) {
     stat_gen_args <- list(...)
     testthat::expect_is(sample_gen_args, "list")
-    testthat::expect_true("n" %in% names(sample_gen_args))
+    testthat::expect_true(("n" %in% names(sample_gen_args)) |
+                          ("x" %in% names(sample_gen_args)))
     testthat::expect_is(pval_args, "list")
 
     samples <- do.call(sample_gen, sample_gen_args)
@@ -330,7 +398,11 @@ MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
   f <- function(x, alternative = NULL, ...) {
     # Setting up arguments for these functions
     stat_args <- list(...)
-    n <- length(x)
+    if (!is.null(dim(x))) {
+      n <- nrow(x)
+    } else {
+      n <- length(x)
+    }
     test_stat_args <- stat_args
     test_stat_args$x <- x
     test_stat_args <- test_stat_args[which(
@@ -338,6 +410,7 @@ MCHTest <- function(test_stat, stat_gen, rand_gen = runif, N = 10000,
 
     rand_gen_args <- stat_args
     rand_gen_args$n <- n
+    rand_gen_args$x <- x
     rand_gen_args <- rand_gen_args[which(
       !(names(rand_gen_args) %in% nuisance_params) & 
         (names(rand_gen_args) %in% rand_gen_formals))]

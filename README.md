@@ -50,9 +50,28 @@ different procedure needs to be applied when nuisance parameters are not
 explicitly stated under the null hypothesis. [2] suggests a procedure using
 optimization techniques (recommending simulated annealing specifically) to
 adversarially select values for nuisance parameters valid under the null
-hypothesis that maximize the <img src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-value computed from the simulated data. That is
-the procedure employed here. (In fact, the tests created by `MCHTest()` are the
-tests described in [2].)
+hypothesis that maximize the <img src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-value computed from the simulated data. This
+procedure is often called *maximized Monte Carlo* (MMC) testing. That is the
+procedure employed here. (In fact, the tests created by `MCHTest()` are the
+tests described in [2].) Unfortunately, MMC, while conservative and exact, has
+much less power than if the unknown parameters were known, perhaps due to the
+behavior of samples under distributions with parameter values distant from the
+true parameter values (see [3]).
+
+## Bootstrap Hypothesis Testing
+
+Bootstrap statistical testing is very similar to Monte Carlo testing; the key
+difference is that bootstrap testing uses information from the sample. For
+example a parametric bootstrap test would estimate the parameters of the
+distribution the data is assumed to follow and generate datasets from that
+distribution using those estimates as the actual parameter values. A permutation
+test (like Fisher's permutation test; see [4]) would use the original dataset
+values but randomly shuffle the labeles (stating which sample an observation
+belongs to) to generate new data sets and thus new simulated test statistics.
+<img src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-values are essentially computed the same way.
+
+Unlike Monte Carlo tests and MMC, these tests are not exact tests. That said,
+they often have good finite sample properties. (See [3].)
 
 See the documentation for more details and references.
 
@@ -66,6 +85,13 @@ For example, the code below creates the Monte Carlo equivalent of a <img src="sv
 
 ```r
 library(MCHT)
+#> .------..------..------..------.
+#> |M.--. ||C.--. ||H.--. ||T.--. |
+#> | (\/) || :/\: || :/\: || :/\: |
+#> | :\/: || :\/: || (__) || (__) |
+#> | '--'M|| '--'C|| '--'H|| '--'T|
+#> `------'`------'`------'`------' v. 0.0.0.9000
+#> Type citation("MCHT") for citing this R package in publications
 library(doParallel)
 #> Loading required package: foreach
 #> Loading required package: iterators
@@ -142,7 +168,7 @@ mc.t.test(dat, mu = 1)
 #> 	Monte Carlo One Sample t-Test
 #> 
 #> data:  dat
-#> S = 0.84975, p-value = 0.0115
+#> S = 0.84975, p-value = 0.9885
 mc.t.test(dat, mu = 1, alternative = "two.sided")
 #> 
 #> 	Monte Carlo One Sample t-Test
@@ -169,3 +195,6 @@ tests. See other documentation for details.
 2. J-M Dufour, *Monte Carlo tests with nuisance parameters: A general approach
    to finite-sample inference and nonstandard asymptotics*, Journal of
    Econometrics, vol. 133 no. 2 (2006) pp. 443-477
+3. J. G. MacKinnon, *Bootstrap hypothesis testing* in *Handbook of computational
+   econometrics* (2009) pp. 183-213
+4. R. A. Fisher, *The design of experiments* (1935)
