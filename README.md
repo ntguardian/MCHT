@@ -10,7 +10,7 @@ output:
 
 # MCHT
 
-*Version 0.0.0.9000*
+*Version 0.1.0*
 
 **MCHT** is a package implementing an interface for creating and using Monte
 Carlo tests. The primary function of the package is `MCHTest()`, which creates
@@ -24,39 +24,39 @@ the R command `devtools::install_github("ntguardian/MCHT")`.
 
 ## Monte Carlo Hypothesis Testing
 
-Monte Carlo testing is a form of hypothesis testing where the <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/2ec6e630f199f589a2402fdf3e0289d5.svg?invert_in_darkmode" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-values are
+Monte Carlo testing is a form of hypothesis testing where the <img src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-values are
 computed using the empirical distribution of the test statistic computed from
 data simulated under the null hypothesis. These tests are used when the
 distribution of the test statistic under the null hypothesis is intractable or
 difficult to compute, or as an exact test (that is, a test where the
-distribution used to compute <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/2ec6e630f199f589a2402fdf3e0289d5.svg?invert_in_darkmode" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-values is appropriate for any sample size, not
+distribution used to compute <img src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-values is appropriate for any sample size, not
 just large sample sizes).
 
-Suppose that <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/aabe1517ce1102595512b736cbf264bb.svg?invert_in_darkmode" align=middle width=15.831502499999988pt height=14.15524440000002pt/> is the observed value of the test statistic and large values
-of <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/aabe1517ce1102595512b736cbf264bb.svg?invert_in_darkmode" align=middle width=15.831502499999988pt height=14.15524440000002pt/> are evidence against the null hypothesis; normally, <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/2ec6e630f199f589a2402fdf3e0289d5.svg?invert_in_darkmode" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-values would be
-computed as <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/94e4cf2543ecdf13ca181360434546e6.svg?invert_in_darkmode" align=middle width=70.60317329999998pt height=24.65753399999998pt/>, where <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/1ef429296c00d0d4dc9914bfb2f6ec6f.svg?invert_in_darkmode" align=middle width=147.44866949999997pt height=24.65753399999998pt/> is the cumulative
-distribution functions and <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/49aebd2501b0bf3a5225ca26ba123672.svg?invert_in_darkmode" align=middle width=18.205948199999987pt height=22.465723500000017pt/> is the random variable version of <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/aabe1517ce1102595512b736cbf264bb.svg?invert_in_darkmode" align=middle width=15.831502499999988pt height=14.15524440000002pt/>. We
-cannot use <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/b8bc815b5e9d5177af01fd4d3d3c2f10.svg?invert_in_darkmode" align=middle width=12.85392569999999pt height=22.465723500000017pt/> for some reason; it's intractable, or the <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/b8bc815b5e9d5177af01fd4d3d3c2f10.svg?invert_in_darkmode" align=middle width=12.85392569999999pt height=22.465723500000017pt/> provided is only
+Suppose that <img src="svgs/aabe1517ce1102595512b736cbf264bb.svg" align=middle width=15.831502499999988pt height=14.15524440000002pt/> is the observed value of the test statistic and large values
+of <img src="svgs/aabe1517ce1102595512b736cbf264bb.svg" align=middle width=15.831502499999988pt height=14.15524440000002pt/> are evidence against the null hypothesis; normally, <img src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-values would be
+computed as <img src="svgs/94e4cf2543ecdf13ca181360434546e6.svg" align=middle width=70.60317329999998pt height=24.65753399999998pt/>, where <img src="svgs/1ef429296c00d0d4dc9914bfb2f6ec6f.svg" align=middle width=147.44866949999997pt height=24.65753399999998pt/> is the cumulative
+distribution functions and <img src="svgs/49aebd2501b0bf3a5225ca26ba123672.svg" align=middle width=18.205948199999987pt height=22.465723500000017pt/> is the random variable version of <img src="svgs/aabe1517ce1102595512b736cbf264bb.svg" align=middle width=15.831502499999988pt height=14.15524440000002pt/>. We
+cannot use <img src="svgs/b8bc815b5e9d5177af01fd4d3d3c2f10.svg" align=middle width=12.85392569999999pt height=22.465723500000017pt/> for some reason; it's intractable, or the <img src="svgs/b8bc815b5e9d5177af01fd4d3d3c2f10.svg" align=middle width=12.85392569999999pt height=22.465723500000017pt/> provided is only
 appropriate for large sample sizes.
 
-Instead of using <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/b8bc815b5e9d5177af01fd4d3d3c2f10.svg?invert_in_darkmode" align=middle width=12.85392569999999pt height=22.465723500000017pt/> we will use <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/15c3c9c70eb47be5a6e886765530f5d7.svg?invert_in_darkmode" align=middle width=22.21695959999999pt height=31.141535699999984pt/>, which is the empirical CDF of
+Instead of using <img src="svgs/b8bc815b5e9d5177af01fd4d3d3c2f10.svg" align=middle width=12.85392569999999pt height=22.465723500000017pt/> we will use <img src="svgs/15c3c9c70eb47be5a6e886765530f5d7.svg" align=middle width=22.21695959999999pt height=31.141535699999984pt/>, which is the empirical CDF of
 the same test statistic computed from simulated data following the distribution
 prescribed by the null hypothesis of the test. For the sake of simplicity in
-this presentation, assume that <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/e257acd1ccbe7fcb654708f1a866bfe9.svg?invert_in_darkmode" align=middle width=11.027402099999989pt height=22.465723500000017pt/> is a continuous random variable. Now our
-<img src="https://rawgit.com/ntguardian/MCHT/None/svgs/2ec6e630f199f589a2402fdf3e0289d5.svg?invert_in_darkmode" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-value is <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/422c7ea56f597c35a6c675a532225eb9.svg?invert_in_darkmode" align=middle width=80.78808375pt height=31.141535699999984pt/>, where <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/fa268ea8502a266665526053011ee08d.svg?invert_in_darkmode" align=middle width=206.580495pt height=32.19743999999999pt/> where <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/21fd4e8eecd6bdf1a4d3d6bd1fb8d733.svg?invert_in_darkmode" align=middle width=8.484300000000001pt height=22.381919999999983pt/> is the indicator function and
-<img src="https://rawgit.com/ntguardian/MCHT/None/svgs/bc3c694d37b92361e3102381d7c007e6.svg?invert_in_darkmode" align=middle width=28.21459079999999pt height=30.267491100000004pt/> is an independent random copy of <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/49aebd2501b0bf3a5225ca26ba123672.svg?invert_in_darkmode" align=middle width=18.205948199999987pt height=22.465723500000017pt/> computed from simulated
-data with a sample size of <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/55a049b8f161ae7cfeb0197d75aff967.svg?invert_in_darkmode" align=middle width=9.86687624999999pt height=14.15524440000002pt/>.
+this presentation, assume that <img src="svgs/e257acd1ccbe7fcb654708f1a866bfe9.svg" align=middle width=11.027402099999989pt height=22.465723500000017pt/> is a continuous random variable. Now our
+<img src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-value is <img src="svgs/422c7ea56f597c35a6c675a532225eb9.svg" align=middle width=80.78808375pt height=31.141535699999984pt/>, where <img src="svgs/fa268ea8502a266665526053011ee08d.svg" align=middle width=206.580495pt height=32.19743999999999pt/> where <img src="svgs/21fd4e8eecd6bdf1a4d3d6bd1fb8d733.svg" align=middle width=8.484300000000001pt height=22.381919999999983pt/> is the indicator function and
+<img src="svgs/bc3c694d37b92361e3102381d7c007e6.svg" align=middle width=28.21459079999999pt height=30.267491100000004pt/> is an independent random copy of <img src="svgs/49aebd2501b0bf3a5225ca26ba123672.svg" align=middle width=18.205948199999987pt height=22.465723500000017pt/> computed from simulated
+data with a sample size of <img src="svgs/55a049b8f161ae7cfeb0197d75aff967.svg" align=middle width=9.86687624999999pt height=14.15524440000002pt/>.
 
-The power of these tests increase with <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/f9c4988898e7f532b9f826a75014ed3c.svg?invert_in_darkmode" align=middle width=14.99998994999999pt height=22.465723500000017pt/> (see [1]) but modern computers are
-able to simulate large <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/f9c4988898e7f532b9f826a75014ed3c.svg?invert_in_darkmode" align=middle width=14.99998994999999pt height=22.465723500000017pt/> quickly, so this is rarely an issue. The procedure
+The power of these tests increase with <img src="svgs/f9c4988898e7f532b9f826a75014ed3c.svg" align=middle width=14.99998994999999pt height=22.465723500000017pt/> (see [1]) but modern computers are
+able to simulate large <img src="svgs/f9c4988898e7f532b9f826a75014ed3c.svg" align=middle width=14.99998994999999pt height=22.465723500000017pt/> quickly, so this is rarely an issue. The procedure
 above also assumes that there are no nuisance parameters and the distribution of
-<img src="https://rawgit.com/ntguardian/MCHT/None/svgs/49aebd2501b0bf3a5225ca26ba123672.svg?invert_in_darkmode" align=middle width=18.205948199999987pt height=22.465723500000017pt/> can effectively be known precisely when the null hypothesis is true (and
+<img src="svgs/49aebd2501b0bf3a5225ca26ba123672.svg" align=middle width=18.205948199999987pt height=22.465723500000017pt/> can effectively be known precisely when the null hypothesis is true (and
 all other conditions of the test are met, such as distributional assumptions). A
 different procedure needs to be applied when nuisance parameters are not
 explicitly stated under the null hypothesis. [2] suggests a procedure using
 optimization techniques (recommending simulated annealing specifically) to
 adversarially select values for nuisance parameters valid under the null
-hypothesis that maximize the <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/2ec6e630f199f589a2402fdf3e0289d5.svg?invert_in_darkmode" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-value computed from the simulated data. This
+hypothesis that maximize the <img src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-value computed from the simulated data. This
 procedure is often called *maximized Monte Carlo* (MMC) testing. That is the
 procedure employed here. (In fact, the tests created by `MCHTest()` are the
 tests described in [2].) Unfortunately, MMC, while conservative and exact, has
@@ -74,7 +74,7 @@ distribution using those estimates as the actual parameter values. A permutation
 test (like Fisher's permutation test; see [4]) would use the original dataset
 values but randomly shuffle the labeles (stating which sample an observation
 belongs to) to generate new data sets and thus new simulated test statistics.
-<img src="https://rawgit.com/ntguardian/MCHT/None/svgs/2ec6e630f199f589a2402fdf3e0289d5.svg?invert_in_darkmode" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-values are essentially computed the same way.
+<img src="svgs/2ec6e630f199f589a2402fdf3e0289d5.svg" align=middle width=8.270567249999992pt height=14.15524440000002pt/>-values are essentially computed the same way.
 
 Unlike Monte Carlo tests and MMC, these tests are not exact tests. That said,
 they often have good finite sample properties. (See [3].)
@@ -86,7 +86,7 @@ See the documentation for more details and references.
 `MCHTest()` is the main function of the package and can create functions with S3
 class `MCHTest` that perform Monte Carlo hypothesis tests.
 
-For example, the code below creates the Monte Carlo equivalent of a <img src="https://rawgit.com/ntguardian/MCHT/None/svgs/4f4f4e395762a3af4575de74c019ebb5.svg?invert_in_darkmode" align=middle width=5.936097749999991pt height=20.221802699999984pt/>-test.
+For example, the code below creates the Monte Carlo equivalent of a <img src="svgs/4f4f4e395762a3af4575de74c019ebb5.svg" align=middle width=5.936097749999991pt height=20.221802699999984pt/>-test.
 
 
 ```r
@@ -96,7 +96,7 @@ library(MCHT)
 #> | (\/) || :/\: || :/\: || :/\: |
 #> | :\/: || :\/: || (__) || (__) |
 #> | '--'M|| '--'C|| '--'H|| '--'T|
-#> `------'`------'`------'`------' v. 0.0.0.9000
+#> `------'`------'`------'`------' v. 0.1.0
 #> Type citation("MCHT") for citing this R package in publications
 library(doParallel)
 #> Loading required package: foreach
