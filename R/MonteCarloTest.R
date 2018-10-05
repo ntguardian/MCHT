@@ -60,7 +60,7 @@
 #' not reject the null hypothesis based on that result.
 #'
 #' This function uses \code{\link[foreach]{foreach}},
-#' \code{\link[doRNG]{%dorng%}}, and \code{\link[foreach]{%dopar%}} to
+#' \code{\link[doRNG]{\%dorng\%}}, and \code{\link[foreach]{\%dopar\%}} to
 #' perform simulations. If the R session is not set up at the start for
 #' parallelization, there will be an initial complaint (after which there are no
 #' more complaints), then these functions will default to using a single core.

@@ -127,6 +127,56 @@ A \code{MCHTest}-class object, a function with parameters \code{x},
 This function creates an \code{MCHTest}-class object, an S3 object that
 defines a bootstrap or Monte Carlo test.
 }
+\details{
+\code{MCHTest}-class objects are effectively functions that accept data and
+maybe some parameters and return an \code{htest}-class object containing the
+results of a Monte Carlo or bootstrap statistical test. These object will
+accept datasets and perhaps some parameters and will return the results of a
+test.
+
+Bootstrap tests can be implemented when the dataset is passed as an argument
+to \code{rand_gen} (which occurs when \code{x} is one of \code{rand_gen}'s
+parameters). The only difference between a Monte Carlo test and a bootstrap
+test in the context of this function is that bootstrap tests use information
+from the original dataset when generating simulated test statistics, while a
+Monte Carlo test does not. When the default function for computing
+\eqn{p}-values is used, this function will perform a test similar to that
+described by \insertCite{mackinnon09;textual}{MCHT}.
+
+For Monte Carlo tests, when the default function for computing \eqn{p}-values
+is used (see \code{\link{pval}}), this is effectively the test described in
+\insertCite{dufour06;textual}{MCHT}. This includes using simulated annealing
+to find values of nuisance parameters that maximize the \eqn{p}-value if the
+null hypothesis is true. Simulated annealing is implemented using
+\code{\link[GenSA]{GenSA}} from the \pkg{GenSA} package, and the
+\code{optim_control} parameter is used for controlling \code{GenSA}'s
+behavior. We highly recommend reading \code{GenSA}'s documentation.
+
+The \code{threshold_pval} argument can be used for stopping the optimization
+procedure when a specified \eqn{p}-value is reached or surpassed.
+\insertCite{dufour06;textual}{MCHT} showed that \eqn{p}-values found using
+the procedure implemented here are conservative (in the sense that they are
+larger than they necessarily need to be). If the algorithm terminates early
+due to surpassing a prespecified \eqn{p}-value, then the estimated
+\eqn{p}-value is known to at least be the value returned, but because the
+\eqn{p}-value is a conservative estimate of the "true" \eqn{p}-value, this
+latter number could be smaller. Thus we cannot say much about the location of
+the true \eqn{p}-value if the algorithm terminates early. For this reason, a
+\code{MCHTest}-class function will, by default, issue a warning if the
+algorithm terminated early. However, by setting
+\code{suppress_threshold_warning} to \code{TRUE}, this behavior can be
+disabled. This recognizes the fact that even though an early termination
+leads to us not being able to say much about the location of the true
+\eqn{p}-value, we know that whatever the more accurate estimate is, we would
+not reject the null hypothesis based on that result.
+
+This function uses \code{\link[foreach]{foreach}},
+\code{\link[doRNG]{\%dorng\%}}, and \code{\link[foreach]{\%dopar\%}} to
+perform simulations. If the R session is not set up at the start for
+parallelization, there will be an initial complaint (after which there are no
+more complaints), then these functions will default to using a single core.
+The example shows how to set up R to use all available cores.
+}
 \examples{
 dat <- c(0.16, 1.00, 0.67, 1.28, 0.31, 1.16, 1.25, 0.93, 0.66, 0.54)
 # Monte Carlo t-test for exponentially distributed data
