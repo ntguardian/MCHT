@@ -163,6 +163,9 @@
 #'   \insertAllCited{}
 #' @export
 #' @examples
+#' # Uncomment and run the following to set up parallelization
+#' # library(doParallel)
+#' # registerDoParallel(detectCores())
 #' dat <- c(0.16, 1.00, 0.67, 1.28, 0.31, 1.16, 1.25, 0.93, 0.66, 0.54)
 #' # Monte Carlo t-test for exponentially distributed data
 #' mc.t.test <- MCHTest(test_stat = function(x, mu = 1) {
