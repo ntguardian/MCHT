@@ -180,7 +180,9 @@ The example shows how to set up R to use all available cores.
 \examples{
 # Uncomment and run the following to set up parallelization
 # library(doParallel)
+
 # registerDoParallel(detectCores())
+
 dat <- c(0.16, 1.00, 0.67, 1.28, 0.31, 1.16, 1.25, 0.93, 0.66, 0.54)
 # Monte Carlo t-test for exponentially distributed data
 mc.t.test <- MCHTest(test_stat = function(x, mu = 1) {
@@ -219,7 +221,7 @@ sg <- function(x, scale = 1, shape = 1) {
   ts(x, scale = scale)
 }
 
-mc.wei.shape.test <- MCHTest(ts, sg, seed = 123, test_params = "scale",
+mc.wei.scale.test <- MCHTest(ts, sg, seed = 123, test_params = "scale",
                              nuisance_params = "shape",
                              optim_control = list(
                                lower = c("shape" = 0),
@@ -227,7 +229,7 @@ mc.wei.shape.test <- MCHTest(ts, sg, seed = 123, test_params = "scale",
                                control = list("max.time" = 10)
                              ), threshold_pval = .2, N = 1000)
 
-mc.wei.shape.test(rweibull(100, scale = 4, shape = 2), scale = 2)
+mc.wei.scale.test(rweibull(100, scale = 4, shape = 2), scale = 2)
 
 # Bootstrap hypothesis test
 # Kolmogorov-Smirnov test for Weibull distribution via parametric botstrap
