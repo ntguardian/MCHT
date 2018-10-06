@@ -142,6 +142,23 @@ test_that("An MCHTest-class object functions properly", {
   expect_silent(mc.test.6(dat, alternative = "two.sided", mu = 0.5))
   expect_equal(mc.test.6(dat, alternative = "two.sided", mu = 0.5)$p.value,
                0.9)
+
+  ts <- function(x, sigma = 1) {sqrt(length(x)) * mean(x)/sigma}
+  sg <- function(x, sigma = 1) {x <- sigma * x; ts(x, sigma = sigma)}
+  rg <- function(n) {rnorm(n)}
+  mc.test.7 <- MCHTest(ts, sg, rg, seed = 123, N = 100, fixed_params = "sigma")
+  mc.test.8 <- MCHTest(ts, sg, rg, seed = 123, N = 100, fixed_params = "sigma",
+                       localize_functions = TRUE,
+                       imported_objects = list("ts" = ts))
+  ts <- function(x) {mean(x)}
+
+  expect_error(mc.test.7(dat, sigma = 2))
+  expect_success(mc.test.8(dat, sigma = 2))
+
+  mc.test.9 <- MCHTest(test_stat_1, function(x) {test_stat(x)},
+                       function(x) {rnorm(length(x))}, seed = 123, N = 100,
+                       localize_functions = TRUE)
+  expect_success(mc.test.9(dat))
 })
 
 test_that("get_MCHTest_settings() functions properly", {

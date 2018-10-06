@@ -66,6 +66,31 @@
 #' more complaints), then these functions will default to using a single core.
 #' The example shows how to set up R to use all available cores.
 #'
+#' Due to the way environments work in R, if functions passed to
+#' \code{test_stat}, \code{stat_gen}, \code{rand_gen}, or \code{pval_func}
+#' depend on objects in the global namespace, and then those objects change, two
+#' otherwise identical runs of the resulting test could produce different
+#' results. Thus changing other objects causes side effects that may not be
+#' desired; the resulting \code{MCHTest}-class objects are no longer
+#' self-contained entities. This is why the \code{localize_functions} and
+#' \code{imported_objects} parameters exist. If \code{localize_functions} is
+#' \code{TRUE}, all of these parameters will have their environments changed to
+#' the environment in which the returned function belongs, and objects included
+#' in the list passed to \code{imported_objects} are added to this environment
+#' as well. Doing this can allow for making the \code{MCHTest}-class object
+#' self-contained and immune to side effects from changes in the global
+#' namespace. See the examples for a demonstration on how this is done.
+#' Localizing functions is safer (even though it could cause errors to be thrown
+#' when not done properly), so we highly recommend doing so.
+#'
+#' (Beware of localizing functions from packages, like
+#' \code{\link[stats]{runif}}; if they depends on objects from the package
+#' namespace then setting \code{localize_functions} to \code{TRUE} will strip
+#' them of their package namespace and thus cause errors if they depend on other
+#' objects in that namespace. A safer approach would be to pass these objects
+#' in a wrapper function, like \code{function (n) {runif(n)}}, than passing the
+#' functions directly.)
+#'
 #' @param test_stat A function that computes the test statistic from input data;
 #'                  \code{x} must be a parameter of this function representing
 #'                  test data 
@@ -153,6 +178,26 @@
 #' @param suppress_threshold_warning If \code{TRUE}, user will not be warned if
 #'                                   the threshold \eqn{p}-value was surpassed
 #'                                   by the optimization algorithm
+#' @param localize_functions If \code{TRUE}, the environment of
+#'                           \code{test_statss}, \code{stat_gen},
+#'                           \code{rand_gen}, and \code{pval_func} will be
+#'                           changed to the environment of the returned
+#'                           function; this is safer than when this is
+#'                           \code{FALSE} since it helps ensure there are no
+#'                           surprising side effects when functions in the
+#'                           parent environment (say, the global namespace) is
+#'                           changed, but if those functions depend on other
+#'                           functions that are not "exposed" to the resulting
+#'                           function (either via a parameter value or via, say,
+#'                           the argument \code{imported_objects}) the resulting
+#'                           errors can be confusing to those who don't
+#'                           understand how R environments work
+#' @param imported_objects A named list of objects that will be "exposed" and
+#'                         localized to the environment of the returned
+#'                         function; this would be useful if
+#'                         \code{localize_functions} is \code{TRUE} but some
+#'                         arguments depend on other functions, because those
+#'                         other functions can be imported here
 #' @return A \code{MCHTest}-class object, a function with parameters \code{x},
 #'         \code{alternative}, and \code{...}, with other parameters being
 #'         passed to functions such as those passed to \code{test_stat} and
@@ -186,6 +231,9 @@
 #' library(MASS)
 #' library(fitdistrplus)
 #'
+#' # For these examples we need to be sensitive about namespaces, or we may
+#' # discover unwanted side effects
+#'
 #' ts <- function(x, scale = 1) {
 #'   fit_null <- coef(fitdist(x, "weibull", fix.arg = list("scale" = scale)))
 #'   kt <- fit_null[["shape"]]
@@ -203,18 +251,79 @@
 #' 
 #' sg <- function(x, scale = 1, shape = 1) {
 #'   x <- qweibull(x, shape = shape, scale = scale)
+#'
+#'   # There is a reason why we're copying the original test statistic rather
+#'   # than just calling ts() again; it has to do with environments and making
+#'   # sure that the resulting function MCHTest() creates is independent of the
+#'   # global namespace
+#'   fit_null <- coef(fitdist(x, "weibull", fix.arg = list("scale" = scale)))
+#'   kt <- fit_null[["shape"]]
+#'   l0 <- scale
+#'   fit_all <- coef(fitdist(x, "weibull"))
+#'   kh <- fit_all[["shape"]]
+#'   lh <- fit_all[["scale"]]
+#'   n <- length(x)
+#' 
+#'   # Test statistic, based on the negative-log-likelihood ratio
+#'   suppressWarnings(n * ((kt - 1) * log(l0) - (kh - 1) * log(lh) -
+#'       log(kt/kh) - log(lh/l0)) - (kt - kh) * sum(log(x)) + l0^(-kt) *
+#'       sum(x^kt) - lh^(-kh) * sum(x^kh))
+#'
+#'   # The following would have bad side effects if ts() is redefined in the
+#'   # global namespace
+#'   # ts(x, scale = scale)
+#' }
+#' 
+#' mc.wei.scale.test.1 <- MCHTest(ts, sg, seed = 123, test_params = "scale",
+#'                                nuisance_params = "shape",
+#'                                optim_control = list(
+#'                                  lower = c("shape" = 0),
+#'                                  upper = c("shape" = 100),
+#'                                  control = list("max.time" = 10)
+#'                                ), threshold_pval = .2, N = 1000)
+#' 
+#' mc.wei.scale.test.1(rweibull(100, scale = 4, shape = 2), scale = 2)
+#'
+#' # First alternative approach
+#'
+#' sg <- function(x, scale = 1, shape = 1) {
+#'   x <- qweibull(x, shape = shape, scale = scale)
+#'   # The following works because test_stat will be a function in the namespace
+#'   # of the function MCHTest() creates
+#'   test_stat(x, scale = scale)
+#' }
+#' 
+#' mc.wei.scale.test.2 <- MCHTest(ts, sg, seed = 123, test_params = "scale",
+#'                                nuisance_params = "shape",
+#'                                optim_control = list(
+#'                                  lower = c("shape" = 0),
+#'                                  upper = c("shape" = 100),
+#'                                  control = list("max.time" = 10)
+#'                                ), threshold_pval = .2, N = 1000,
+#'                                localize_functions = TRUE)
+#' 
+#' mc.wei.scale.test.2(rweibull(100, scale = 4, shape = 2), scale = 2)
+#'
+#' # Second alternative approach
+#'
+#' sg <- function(x, scale = 1, shape = 1) {
+#'   x <- qweibull(x, shape = shape, scale = scale)
+#'   # We will add ts() to the list of imported objects under its own name, so
+#'   # this is now okay
 #'   ts(x, scale = scale)
 #' }
 #' 
-#' mc.wei.scale.test <- MCHTest(ts, sg, seed = 123, test_params = "scale",
-#'                              nuisance_params = "shape",
-#'                              optim_control = list(
-#'                                lower = c("shape" = 0),
-#'                                upper = c("shape" = 100),
-#'                                control = list("max.time" = 10)
-#'                              ), threshold_pval = .2, N = 1000)
+#' mc.wei.scale.test.3 <- MCHTest(ts, sg, seed = 123, test_params = "scale",
+#'                                nuisance_params = "shape",
+#'                                optim_control = list(
+#'                                  lower = c("shape" = 0),
+#'                                  upper = c("shape" = 100),
+#'                                  control = list("max.time" = 10)
+#'                                ), threshold_pval = .2, N = 1000,
+#'                                localize_functions = TRUE,
+#'                                imported_objects = list("ts" = ts))
 #' 
-#' mc.wei.scale.test(rweibull(100, scale = 4, shape = 2), scale = 2)
+#' mc.wei.scale.test.3(rweibull(100, scale = 4, shape = 2), scale = 2)
 #' 
 #' # Bootstrap hypothesis test
 #' # Kolmogorov-Smirnov test for Weibull distribution via parametric botstrap
@@ -262,14 +371,29 @@
 #'                         lock_alternative = FALSE)
 #' 
 #' permute.test(df, alternative = "two.sided")
-MCHTest <- function(test_stat, stat_gen, rand_gen = stats::runif, N = 10000,
+MCHTest <- function(test_stat, stat_gen,
+                    rand_gen = function(n) {stats::runif(n)}, N = 10000,
                     seed = NULL, memoise_sample = TRUE, pval_func = MCHT::pval,
                     method = "Monte Carlo Test", test_params = NULL,
                     fixed_params = NULL, nuisance_params = NULL,
                     optim_control = NULL, tiebreaking = FALSE,
                     lock_alternative = TRUE, threshold_pval = 1,
-                    suppress_threshold_warning = FALSE) {
+                    suppress_threshold_warning = FALSE,
+                    localize_functions = FALSE,
+                    imported_objects = NULL) {
   force(pval_func)
+
+  if (localize_functions) {
+    environment(test_stat) <- environment()
+    environment(stat_gen) <- environment()
+    environment(rand_gen) <- environment()
+    environment(pval_func) <- environment()
+  }
+  if (is.list(imported_objects)) {
+    for (n in names(imported_objects)) {
+      assign(n, imported_objects[[n]], environment())
+    }
+  }
 
   # Vector of names of function formals
   test_stat_formals <- names(formals(test_stat))
@@ -613,20 +737,32 @@ print.MCHTest <- function(x, ...) {
   }
   cat("\n")
 
+  other_lines <- FALSE
   if (f_info$memoise_sample) {
+    other_lines <- TRUE
     cat("Memoisation enabled\n")
   }
   if (f_info$lock_alternative) {
+    other_lines <- TRUE
     cat("Argument \"alternative\" is locked\n")
   }
   if (length(f_info$nuisance_params) > 0 & f_info$threshold_pval < 1) {
+    other_lines <- TRUE
     cat("Threshold p-Value: ", f_info$threshold_pval, "\n")
     if (f_info$suppress_threshold_warning) {
       cat("Threshold p-value warnings suppressed\n")
     }
   }
+  if (f_info$localize_functions) {
+    other_lines <- TRUE
+    cat("Functions localized\n")
+  }
+  if (length(names(f_info$imported_objects)) > 0) {
+    other_lines <- TRUE
+    cat("Imported Objects: ", names(f_info$imported_objects))
+  }
 
-  if (f_info$memoise_sample | f_info$lock_alternative) {
+  if (other_lines) {
     cat("\n")
   }
 }
