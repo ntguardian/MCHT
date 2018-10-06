@@ -88,7 +88,7 @@
 #' namespace then setting \code{localize_functions} to \code{TRUE} will strip
 #' them of their package namespace and thus cause errors if they depend on other
 #' objects in that namespace. A safer approach would be to pass these objects
-#' in a wrapper function, like \code{function (n) {runif(n)}}, than passing the
+#' in a wrapper function, like \code{function(n) {runif(n)}}, than passing the
 #' functions directly.)
 #'
 #' @param test_stat A function that computes the test statistic from input data;
