@@ -18,6 +18,12 @@ knitr::opts_chunk$set(
 
 *Version `r packageVersion("MCHT")`*
 
+[![GitHub issues](https://img.shields.io/github/issues/ntguardian/MCHT.svg)](https://github.com/ntguardian/MCHT/issues)
+[![GitHub forks](https://img.shields.io/github/forks/ntguardian/MCHT.svg)](https://github.com/ntguardian/MCHT/network)
+[![GitHub stars](https://img.shields.io/github/stars/ntguardian/MCHT.svg)](https://github.com/ntguardian/MCHT/stargazers)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Github All Releases](https://img.shields.io/github/downloads/ntguardian/MCHT/total.svg)](https://github.com/ntguardian/MCHT)
+
 **MCHT** is a package implementing an interface for creating and using Monte
 Carlo tests. The primary function of the package is `MCHTest()`, which creates
 functions with S3 class `MCHTest` that perform a Monte Carlo test.
