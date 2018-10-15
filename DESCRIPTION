@@ -1,6 +1,6 @@
 Package: MCHT
 Title: Bootstrap and Monte Carlo Hypothesis Testing
-Version: 0.1.0
+Version: 0.2.0.9000
 Date: 2018-10-05 
 Authors@R: person("Curtis", "Miller", email = "cmiller@math.utah.edu", role = c("aut", "cre"))
 Description: Facilitates bootstrap and Monte Carlo hypothesis testing.

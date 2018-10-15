@@ -381,6 +381,7 @@ MCHTest <- function(test_stat, stat_gen,
                     suppress_threshold_warning = FALSE,
                     localize_functions = FALSE,
                     imported_objects = NULL) {
+  # TODO: curtis: ONE-TIME ESTIMATION SUPPORT -- Mon 15 Oct 2018 01:20:25 PM MDT
   force(pval_func)
 
   if (localize_functions) {
