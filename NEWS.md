@@ -1,5 +1,14 @@
 # MCHT News
 
+## Version 0.2.0
+---
+
+### Functions
+
+- Created `stat_t()`, the test statistic for the t-test
+- Created `stat_t_two_sample()`, the test statistic for Welch's two-sample
+    t-test
+
 ## Version 0.1.0
 ---
 

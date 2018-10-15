@@ -4,7 +4,7 @@
 
 # MCHT
 
-*Version 0.1.0*
+*Version 0.2.0.9000*
 
 [![GitHub issues](https://img.shields.io/github/issues/ntguardian/MCHT.svg)](https://github.com/ntguardian/MCHT/issues)
 [![GitHub forks](https://img.shields.io/github/forks/ntguardian/MCHT.svg)](https://github.com/ntguardian/MCHT/network)
